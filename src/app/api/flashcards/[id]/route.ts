@@ -22,7 +22,6 @@ async function verifyAuth() {
     }
 }
 
-
 export async function GET(
     request: NextRequest,
     { params }: any
@@ -46,6 +45,42 @@ export async function GET(
         console.error('Error fetching lesson:', error);
         return NextResponse.json(
             { error: 'Failed to fetch lesson' },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(
+    request: NextRequest,
+    { params }: any
+) {
+    try {
+        const userId = await verifyAuth();
+        await connectDB();
+
+        const { id } = params;
+        
+        // Find and delete the lesson by slug and userId
+        const deletedLesson = await Lesson.findOneAndDelete({ 
+            slug: id,
+            userId 
+        });
+
+        if (!deletedLesson) {
+            return NextResponse.json(
+                { error: 'Lesson not found or unauthorized' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({ 
+            message: 'Lesson deleted successfully',
+            deletedLesson 
+        });
+    } catch (error) {
+        console.error('Error deleting lesson:', error);
+        return NextResponse.json(
+            { error: 'Failed to delete lesson' },
             { status: 500 }
         );
     }

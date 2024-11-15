@@ -195,7 +195,7 @@ export default function Home() {
         onConfirm={async () => {
           try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`/api/flashcards?slug=${lessonToDelete.slug}`, {
+            const response = await fetch(`/api/flashcards/${lessonToDelete.slug}`, {
               method: 'DELETE',
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -215,9 +215,8 @@ export default function Home() {
             alert('Failed to delete lesson');
           }
         }}
-        title="Delete Flashcard"
-        message="Are you sure you want to delete this flashcard? This action cannot be undone."
-        itemName={lessonToDelete?.title}
+        title="Delete Lesson"
+        message="Are you sure you want to delete this lesson? This action cannot be undone."
       />
     </main>
   );

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/dist/client/link';
 import Image from 'next/image';
 import { Flashcard } from '@/models/Lesson';
+import Modal from '@/components/Modal';
 
 interface Lesson {
     slug: string;
@@ -31,6 +32,7 @@ const FlashcardPage = () => {
     const [imageLoading, setImageLoading] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const fetchLessons = useCallback(async () => {
         try {
@@ -120,10 +122,6 @@ const FlashcardPage = () => {
     }, [currentCard, flashcards]);
 
     const handleDelete = async () => {
-        if (!window.confirm('Are you sure you want to delete this lesson?')) {
-            return;
-        }
-
         try {
             setIsDeleting(true);
             const token = localStorage.getItem('token');
@@ -386,7 +384,7 @@ const FlashcardPage = () => {
                     </button>
                 </Link>
                 <button 
-                    onClick={handleDelete}
+                    onClick={() => setIsModalOpen(true)}
                     disabled={isDeleting}
                     className='w-full md:w-auto bg-red-500 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2 disabled:opacity-50'
                 >
@@ -454,6 +452,13 @@ const FlashcardPage = () => {
             ) : (
                 <div className="pt-20 md:pt-40">No flashcards available for this lesson.</div>
             )}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleDelete}
+                title="Delete Lesson"
+                message='Are you sure you want to delete this lesson?'
+            />
         </div>
     )
 };
