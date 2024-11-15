@@ -29,6 +29,7 @@ const EditFlashcardPage = () => {
     useEffect(() => {
         const fetchLesson = async () => {
             try {
+                setIsLoading(true);
                 const token = localStorage.getItem('token');
                 if (!token) {
                     router.push('/login');
@@ -54,6 +55,8 @@ const EditFlashcardPage = () => {
             } catch (error) {
                 console.error('Error fetching lesson:', error);
                 router.push('/');
+            } finally {
+                setIsLoading(false);
             }
         };
 
