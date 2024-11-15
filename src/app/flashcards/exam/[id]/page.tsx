@@ -62,7 +62,9 @@ const ExamPage = () => {
         
         if (!currentCard) return;
 
-        const isCorrect = userAnswer.toLowerCase().trim() === currentCard.back.toLowerCase().trim();
+        const isCorrect = currentCard.back.toLowerCase().trim().split(',').some(answer => 
+            answer.trim() === userAnswer.toLowerCase().trim()
+        );
         setResult(isCorrect);
 
         // Update stats
@@ -180,14 +182,14 @@ const ExamPage = () => {
                             )}
 
                             <button
-                                onClick={() => router.push('/')}
+                                onClick={() => router.push(`/flashcards/${id}`)}
                                 className='w-full mt-6 bg-blue-500 text-white p-2 rounded hover:bg-blue-600'
                             >
                                 Back to Flashcards
                             </button>
                         </div>
                     ) : (
-                        <p>Loading...</p>
+                        <div className='loader'></div>
                     )}
                 </div>
             )}

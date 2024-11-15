@@ -16,6 +16,7 @@ interface LessonForm {
 
 const CreateFlashcardPage = () => {
     const router = useRouter();
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState<LessonForm>({
         title: '',
         description: '',
@@ -60,6 +61,7 @@ const CreateFlashcardPage = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         try {
             const token = localStorage.getItem('token');
             
@@ -85,6 +87,8 @@ const CreateFlashcardPage = () => {
             }
         } catch (error) {
             console.error('Error creating lesson:', error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -167,9 +171,10 @@ const CreateFlashcardPage = () => {
 
                 <button
                     type="submit"
-                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={isLoading}
                 >
-                    Create Lesson
+                    {isLoading ? 'Creating...' : 'Create Lesson'}
                 </button>
             </form>
         </div>

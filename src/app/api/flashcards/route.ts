@@ -96,9 +96,118 @@ export async function POST(req: Request) {
 }
 
 export async function PUT(req: Request) {
-    return NextResponse.json({ message: 'Hello, world!' });
+    try {
+        // Verify authentication
+        try {
+            await verifyAuth();
+        } catch (error) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        // Connect to database
+        await connectDB();
+
+        // Parse request body
+        const body = await req.json();
+        const { title, description, flashcards, slug } = body;
+        const userId = await verifyAuth();
+
+        // Validate required fields
+        if (!title || !description || !flashcards || flashcards.length === 0 || !slug) {
+            return NextResponse.json(
+                { error: 'Missing required fields' },
+                { status: 400 }
+            );
+        }
+
+        // Validate flashcard structure
+        const isValidFlashcards = flashcards.every((card: any) => 
+            card.front && typeof card.front === 'string' &&
+            card.back && typeof card.back === 'string'
+        );
+
+        if (!isValidFlashcards) {
+            return NextResponse.json(
+                { error: 'Invalid flashcard format' },
+                { status: 400 }
+            );
+        }
+
+        // Find and update the lesson
+        const lesson = await Lesson.findOneAndUpdate(
+            { slug, userId },
+            {
+                title,
+                description,
+                flashcards,
+                slug: title.toLowerCase().replace(/ /g, '-')
+            },
+            { new: true }
+        );
+
+        if (!lesson) {
+            return NextResponse.json(
+                { error: 'Lesson not found or unauthorized' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json(lesson);
+    } catch (error) {
+        console.error('Error updating lesson:', error);
+        return NextResponse.json(
+            { error: 'Failed to update lesson' },
+            { status: 500 }
+        );
+    }
 }
 
 export async function DELETE(req: Request) {
-    return NextResponse.json({ message: 'Hello, world!' });
+    try {
+        // Verify authentication
+        try {
+            await verifyAuth();
+        } catch (error) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
+        // Connect to database
+        await connectDB();
+
+        // Get the slug from the URL
+        const url = new URL(req.url);
+        const slug = url.searchParams.get('slug');
+        const userId = await verifyAuth();
+
+        if (!slug) {
+            return NextResponse.json(
+                { error: 'Slug parameter is required' },
+                { status: 400 }
+            );
+        }
+
+        // Find and delete the lesson
+        const deletedLesson = await Lesson.findOneAndDelete({ slug, userId });
+
+        if (!deletedLesson) {
+            return NextResponse.json(
+                { error: 'Lesson not found or unauthorized' },
+                { status: 404 }
+            );
+        }
+
+        return NextResponse.json({ message: 'Lesson deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting lesson:', error);
+        return NextResponse.json(
+            { error: 'Failed to delete lesson' },
+            { status: 500 }
+        );
+    }
 }
