@@ -2,12 +2,12 @@
 import Link from 'next/link';
 import { useEffect, useState,useCallback } from 'react';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
-import jwt from 'jsonwebtoken';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [lessons, setLessons] = useState([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -17,22 +17,31 @@ export default function Home() {
   }, []);
 
   const fetchLessons = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    
-    if (!token) {
-      router.push('/login');
-      return;
+    try {
+      const token = localStorage.getItem('token');
+      //console.log('token', token);
+      setLoading(true);
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const response = await fetch('/api/flashcards/byUser', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setLessons(data);
+    } catch (error) {
+      console.error('Error fetching lessons:', error);
+      // Optionally show an error message to the user
+    } finally {
+      setLoading(false);
     }
-
-    const decodedToken = jwt.decode(token) as { email: string };
-    const userEmail = decodedToken.email;
-
-    const response = await fetch('/api/flashcards/byUser', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    const data = await response.json();
-    setLessons(data);
   }, [router]);
 
   useEffect(() => {
@@ -40,6 +49,14 @@ export default function Home() {
   }, [fetchLessons]);
 
   //console.log(lessons);
+  if(loading){
+    return <div className="min-h-screen flex justify-center items-center">
+      <div className='loader'></div>
+    </div>;
+  }
+  if(lessons.length === 0){
+    return <div>No lessons found</div>;
+  }
 
   return (
     <main className="min-h-screen p-24">

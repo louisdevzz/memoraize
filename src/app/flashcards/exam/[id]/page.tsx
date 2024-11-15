@@ -180,7 +180,7 @@ const ExamPage = () => {
                             )}
 
                             <button
-                                onClick={() => router.push('/flashcards')}
+                                onClick={() => router.push('/')}
                                 className='w-full mt-6 bg-blue-500 text-white p-2 rounded hover:bg-blue-600'
                             >
                                 Back to Flashcards

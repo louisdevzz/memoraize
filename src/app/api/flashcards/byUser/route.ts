@@ -2,8 +2,9 @@ import Lesson from "@/models/Lesson";
 import { NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
 import { headers } from 'next/headers';
+import connectDB from "@/lib/mongodb";
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'flashcards'; // Should match the one in auth routes
+const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'flashcards';
 
 async function verifyAuth() {
     const headersList = await headers();
@@ -23,6 +24,8 @@ async function verifyAuth() {
 
 export async function GET(req: Request) {
     try {
+        await connectDB();
+        
         const userId = await verifyAuth();
         const lessons = await Lesson.find({ userId });
         return NextResponse.json(lessons);
