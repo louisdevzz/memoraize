@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
     MONGODB_URI: process.env.MONGODB_URI,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
   },
+  images: {
+    remotePatterns: [
+        {
+            protocol: 'https',
+            hostname: '**',
+        },
+    ],
+  },
 };
 
 export default nextConfig;

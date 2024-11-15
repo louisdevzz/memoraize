@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-
-interface Flashcard {
-    front: string;
-    back: string;
-}
+import { Flashcard, FlashcardType } from '@/models/Lesson';
+import { IoAdd, IoClose, IoArrowBack, IoHome } from 'react-icons/io5';
+import Link from 'next/link';
 
 interface LessonForm {
     title: string;
@@ -19,11 +17,12 @@ const EditFlashcardPage = () => {
     const params = useParams();
     const slug = params.id as string;
     const [isLoading, setIsLoading] = useState(false);
+    const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const [formData, setFormData] = useState<LessonForm>({
         title: '',
         description: '',
-        flashcards: [{ front: '', back: '' }]
+        flashcards: []
     });
 
     useEffect(() => {
@@ -47,7 +46,13 @@ const EditFlashcardPage = () => {
                     setFormData({
                         title: lesson.title,
                         description: lesson.description,
-                        flashcards: lesson.flashcards
+                        flashcards: lesson.flashcards.map((flashcard: Flashcard) => ({
+                            ...flashcard,
+                            options: flashcard.type === 'multipleChoice' ? (flashcard as any).options : [],
+                            correctOption: flashcard.type === 'multipleChoice' ? (flashcard as any).correctOption : '',
+                            imageUrl: flashcard.type === 'image' ? (flashcard as any).imageUrl : '',
+                            audioUrl: flashcard.type === 'audio' ? (flashcard as any).audioUrl : ''
+                        }))
                     });
                 } else {
                     throw new Error('Failed to fetch lesson');
@@ -71,7 +76,7 @@ const EditFlashcardPage = () => {
         }));
     };
 
-    const handleFlashcardChange = (index: number, field: 'front' | 'back', value: string) => {
+    const handleFlashcardChange = (index: number, field: string, value: any) => {
         setFormData(prev => {
             const updatedFlashcards = [...prev.flashcards];
             updatedFlashcards[index] = {
@@ -85,10 +90,99 @@ const EditFlashcardPage = () => {
         });
     };
 
+    const handleTypeChange = (index: number, type: FlashcardType) => {
+        setFormData(prev => {
+            const updatedFlashcards = [...prev.flashcards];
+            const currentContent = {
+                front: updatedFlashcards[index].front,
+                back: updatedFlashcards[index].back
+            };
+            updatedFlashcards[index] = {
+                ...createEmptyFlashcard(),
+                ...currentContent,
+                type
+            } as Flashcard;
+            return {
+                ...prev,
+                flashcards: updatedFlashcards
+            };
+        });
+    };
+
+    function createEmptyFlashcard(): Flashcard {
+        return {
+            type: 'text' as FlashcardType,
+            front: '',
+            back: '',
+            options: [],
+            correctOption: '',
+            imageUrl: '',
+            audioUrl: ''
+        } as Flashcard;
+    }
+
+    const addOption = (flashcardIndex: number) => {
+        setFormData(prev => {
+            const updatedFlashcards = [...prev.flashcards];
+            const flashcard = updatedFlashcards[flashcardIndex] as any;
+            flashcard.options = [...(flashcard.options || []), ''];
+            return {
+                ...prev,
+                flashcards: updatedFlashcards
+            };
+        });
+    };
+
+    const handleOptionChange = (flashcardIndex: number, optionIndex: number, value: string) => {
+        setFormData(prev => {
+            const updatedFlashcards = [...prev.flashcards];
+            const flashcard = updatedFlashcards[flashcardIndex] as any;
+            flashcard.options[optionIndex] = value;
+            return {
+                ...prev,
+                flashcards: updatedFlashcards
+            };
+        });
+    };
+
+    const removeOption = (flashcardIndex: number, optionIndex: number) => {
+        setFormData(prev => {
+            const updatedFlashcards = [...prev.flashcards];
+            const flashcard = updatedFlashcards[flashcardIndex] as any;
+            flashcard.options = flashcard.options.filter((_: any, i: number) => i !== optionIndex);
+            return {
+                ...prev,
+                flashcards: updatedFlashcards
+            };
+        });
+    };
+
+    const handleFileUpload = async (index: number, file: File, fileType: 'image' | 'audio') => {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('fileType', fileType);
+
+            const response = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Upload failed');
+            }
+
+            const data = await response.json();
+            handleFlashcardChange(index, fileType === 'image' ? 'imageUrl' : 'audioUrl', data.url);
+        } catch (error) {
+            console.error(`Error uploading ${fileType}:`, error);
+        }
+    };
+
     const addFlashcard = () => {
         setFormData(prev => ({
             ...prev,
-            flashcards: [...prev.flashcards, { front: '', back: '' }]
+            flashcards: [...prev.flashcards, createEmptyFlashcard()]
         }));
     };
 
@@ -97,6 +191,243 @@ const EditFlashcardPage = () => {
             ...prev,
             flashcards: prev.flashcards.filter((_, i) => i !== index)
         }));
+    };
+
+    // Import renderFlashcardFields from create page
+    const renderFlashcardFields = (flashcard: Flashcard, index: number) => {
+        switch (flashcard.type) {
+            case 'image':
+                return (
+                    <>
+                        <div>
+                            <label className="block mb-1">Image</label>
+                            <div className="space-y-2">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    //@ts-ignore
+                                    ref={(el) => fileInputRefs.current[index] = el}
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            handleFileUpload(index, file, 'image');
+                                        }
+                                    }}
+                                />
+                                <div className="flex gap-4 items-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRefs.current[index]?.click()}
+                                        className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md"
+                                    >
+                                        Choose Image
+                                    </button>
+                                    {(flashcard as any).imageUrl && (
+                                        <div className="relative w-24 h-24">
+                                            <img
+                                                src={(flashcard as any).imageUrl}
+                                                alt="Uploaded preview"
+                                                className="w-full h-full object-cover rounded-md"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleFlashcardChange(index, 'imageUrl', '')}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
+                                            >
+                                                <IoClose size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block mb-1">Description</label>
+                            <input
+                                type="text"
+                                value={flashcard.front}
+                                onChange={(e) => handleFlashcardChange(index, 'front', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block mb-1">Answer</label>
+                            <input
+                                type="text"
+                                value={flashcard.back}
+                                onChange={(e) => handleFlashcardChange(index, 'back', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                    </>
+                );
+
+            case 'multipleChoice':
+                return (
+                    <>
+                        <div>
+                            <label className="block mb-1">Question</label>
+                            <input
+                                type="text"
+                                value={flashcard.front}
+                                onChange={(e) => handleFlashcardChange(index, 'front', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block mb-1">Answer</label>
+                            <input
+                                type="text"
+                                value={flashcard.back}
+                                onChange={(e) => handleFlashcardChange(index, 'back', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="block mb-1">Options</label>
+                            {(flashcard as any).options.map((option: string, optionIndex: number) => (
+                                <div key={optionIndex} className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={option}
+                                        onChange={(e) => handleOptionChange(index, optionIndex, e.target.value)}
+                                        className="flex-1 p-2 border rounded"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeOption(index, optionIndex)}
+                                        className="p-2 text-red-500"
+                                    >
+                                        <IoClose />
+                                    </button>
+                                </div>
+                            ))}
+                            <button
+                                type="button"
+                                onClick={() => addOption(index)}
+                                className="w-full p-2 border-2 border-dashed border-gray-300 rounded hover:border-gray-400 text-gray-600"
+                            >
+                                Add Option
+                            </button>
+                        </div>
+                        <div>
+                            <label className="block mb-1">Correct Option</label>
+                            <select
+                                value={(flashcard as any).correctOption}
+                                onChange={(e) => handleFlashcardChange(index, 'correctOption', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            >
+                                <option value="">Select correct option</option>
+                                {(flashcard as any).options.map((option: string, i: number) => (
+                                    <option key={i} value={option}>{option}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </>
+                );
+
+            case 'audio':
+                return (
+                    <>
+                        <div>
+                            <label className="block mb-1">Audio File</label>
+                            <div className="space-y-2">
+                                <input
+                                    type="file"
+                                    accept="audio/*"
+                                    className="hidden"
+                                    //@ts-ignore
+                                    ref={(el) => fileInputRefs.current[index] = el}
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            handleFileUpload(index, file, 'audio');
+                                        }
+                                    }}
+                                />
+                                <div className="flex gap-4 items-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRefs.current[index]?.click()}
+                                        className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md"
+                                    >
+                                        Choose Audio File
+                                    </button>
+                                    {(flashcard as any).audioUrl && (
+                                        <div className="flex items-center gap-2">
+                                            <audio 
+                                                controls 
+                                                src={(flashcard as any).audioUrl}
+                                                className="h-8"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleFlashcardChange(index, 'audioUrl', '')}
+                                                className="p-1 bg-red-500 text-white rounded-full"
+                                            >
+                                                <IoClose size={16} />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block mb-1">Description</label>
+                            <input
+                                type="text"
+                                value={flashcard.front}
+                                onChange={(e) => handleFlashcardChange(index, 'front', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block mb-1">Answer</label>
+                            <input
+                                type="text"
+                                value={flashcard.back}
+                                onChange={(e) => handleFlashcardChange(index, 'back', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                    </>
+                );
+
+            default: // text
+                return (
+                    <>
+                        <div>
+                            <label className="block mb-1">Front (English)</label>
+                            <input
+                                type="text"
+                                value={flashcard.front}
+                                onChange={(e) => handleFlashcardChange(index, 'front', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className="block mb-1">Back (Vietnamese)</label>
+                            <input
+                                type="text"
+                                value={flashcard.back}
+                                onChange={(e) => handleFlashcardChange(index, 'back', e.target.value)}
+                                className="w-full p-2 border rounded"
+                                required
+                            />
+                        </div>
+                    </>
+                );
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -143,7 +474,23 @@ const EditFlashcardPage = () => {
 
     return (
         <div className="max-w-2xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">Edit Lesson</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold">Edit Lesson</h1>
+                <div className="space-x-2">
+                    <Link
+                        href={`/flashcards/${slug}`}
+                        className="px-4 py-2 bg-blue-500 text-white hover:bg-blue-600 rounded-md inline-flex items-center gap-2"
+                    >
+                        <IoArrowBack /> Back to Lesson
+                    </Link>
+                    <Link
+                        href="/"
+                        className="px-4 py-2 bg-gray-500 text-white hover:bg-gray-600 rounded-md inline-flex items-center gap-2"
+                    >
+                        <IoHome /> Back to Home
+                    </Link>
+                </div>
+            </div>
             <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                     <label htmlFor="title" className="block mb-2">Title</label>
@@ -187,40 +534,42 @@ const EditFlashcardPage = () => {
                                     </button>
                                 )}
                             </div>
-                            <div>
-                                <label className="block mb-1">Tiếng Anh (English)</label>
-                                <input
-                                    type="text"
-                                    value={flashcard.front}
-                                    onChange={(e) => handleFlashcardChange(index, 'front', e.target.value)}
-                                    className="w-full p-2 border rounded"
+                            <div className="relative">
+                                <label className="block mb-1">Type</label>
+                                <select
+                                    value={flashcard.type}
+                                    onChange={(e) => handleTypeChange(index, e.target.value as FlashcardType)}
+                                    className="w-full p-2 pl-3 pr-10 border rounded appearance-none bg-white
+                                    focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                                    cursor-pointer transition-colors"
                                     required
-                                />
+                                >
+                                    <option value="text">📝 Text</option>
+                                    <option value="image">🖼️ Image</option>
+                                    <option value="multipleChoice">📋 Multiple Choice</option>
+                                    <option value="audio">🎵 Audio</option>
+                                </select>
+                                <div className="absolute inset-y-0 right-0 flex items-center px-2 mt-6 pointer-events-none">
+                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </div>
                             </div>
-                            <div>
-                                <label className="block mb-1">Tiếng Việt (Vietnamese)</label>
-                                <input
-                                    type="text"
-                                    value={flashcard.back}
-                                    onChange={(e) => handleFlashcardChange(index, 'back', e.target.value)}
-                                    className="w-full p-2 border rounded"
-                                    required
-                                />
-                            </div>
+                            {renderFlashcardFields(flashcard, index)}
                         </div>
                     ))}
                     <button
                         type="button"
                         onClick={addFlashcard}
-                        className="w-full p-2 border-2 border-dashed border-gray-300 rounded hover:border-gray-400 text-gray-600"
+                        className="w-full p-2 border-2 border-dashed border-gray-300 rounded hover:border-gray-400 text-gray-600 flex items-center justify-center gap-2"
                     >
-                        + Add Flashcard
+                        <IoAdd /> Add Flashcard
                     </button>
                 </div>
 
                 <button
                     type="submit"
-                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     disabled={isLoading}
                 >
                     {isLoading ? 'Updating...' : 'Update Lesson'}

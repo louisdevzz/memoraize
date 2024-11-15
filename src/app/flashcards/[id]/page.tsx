@@ -5,10 +5,12 @@ import { useState, useCallback, useEffect } from 'react';
 import { IoChevronBackOutline, IoChevronForwardOutline, IoHomeOutline, IoPencilOutline, IoSchoolOutline, IoTrashOutline, IoVolumeHighOutline } from "react-icons/io5";
 import { useRouter } from 'next/navigation';
 import Link from 'next/dist/client/link';
+import Image from 'next/image';
+import { Flashcard } from '@/models/Lesson';
 
 interface Lesson {
     slug: string;
-    flashcards: Array<{ front: string; back: string; }>;
+    flashcards: Flashcard[];
 }
 
 
@@ -22,6 +24,10 @@ const FlashcardPage = () => {
     const [isFlipped, setIsFlipped] = useState(false);
     const [speaking, setSpeaking] = useState(false);
     const [phonetic, setPhonetic] = useState<string>('');
+    const [selectedOption, setSelectedOption] = useState<string>('');
+    const [showAnswer, setShowAnswer] = useState(false);
+    const [userAnswer, setUserAnswer] = useState('');
+    const [showImageAnswer, setShowImageAnswer] = useState(false);
 
     const fetchLessons = useCallback(async () => {
         try {
@@ -103,12 +109,162 @@ const FlashcardPage = () => {
         </div>;
     }
 
+    const renderFlashcardContent = (flashcard: Flashcard, side: 'front' | 'back') => {
+        const content = side === 'front' ? flashcard.front : flashcard.back;
+
+        switch (flashcard.type) {
+            case 'image':
+                return (
+                    <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
+                        <div className="relative w-full">
+                            <Image 
+                                src={flashcard.imageUrl} 
+                                alt={content}
+                                width={300}
+                                height={300}
+                                className="rounded-lg mx-auto"
+                            />
+                            <p className="text-sm mt-2 text-center">{content}</p>
+                        </div>
+                        
+                        <div className="w-full flex gap-2">
+                            <input
+                                type="text"
+                                value={userAnswer}
+                                onChange={(e) => setUserAnswer(e.target.value)}
+                                placeholder="Enter your answer"
+                                className="flex-1 p-3 border rounded-lg"
+                                disabled={showImageAnswer}
+                            />
+                            <button
+                                onClick={() => setShowImageAnswer(true)}
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 whitespace-nowrap"
+                                disabled={showImageAnswer}
+                            >
+                                Check
+                            </button>
+                        </div>
+
+                        {showImageAnswer && (
+                            <div className={`w-full p-4 rounded-lg text-center ${
+                                userAnswer.toLowerCase() === flashcard.back.toLowerCase()
+                                    ? 'bg-green-100 text-green-700'
+                                    : 'bg-red-100 text-red-700'
+                            }`}>
+                                {userAnswer.toLowerCase() === flashcard.back.toLowerCase() 
+                                    ? '✅ Correct!' 
+                                    : `❌ Incorrect. The correct answer is: ${flashcard.back}`
+                                }
+                            </div>
+                        )}
+                    </div>
+                );
+            
+            case 'multipleChoice':
+                if (side === 'front') {
+                    return (
+                        <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
+                            <p className="title text-lg font-semibold text-center">{content}</p>
+                            <div className="flex flex-col gap-3 w-full">
+                                {flashcard.options.map((option, index) => (
+                                    <button
+                                        key={index}
+                                        className={`w-full p-4 rounded-lg text-center transition-all transform hover:scale-105
+                                            ${showAnswer 
+                                                ? option === flashcard.correctOption
+                                                    ? 'bg-green-100 border-2 border-green-500'
+                                                    : selectedOption === option
+                                                        ? 'bg-red-100 border-2 border-red-500'
+                                                        : 'bg-gray-100'
+                                                : selectedOption === option
+                                                    ? 'bg-blue-100 border-2 border-blue-500'
+                                                    : 'bg-gray-100 hover:bg-gray-200'
+                                            }
+                                        `}
+                                        onClick={() => {
+                                            if (!showAnswer) {
+                                                setSelectedOption(option);
+                                                setShowAnswer(true);
+                                            }
+                                        }}
+                                        disabled={showAnswer}
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </div>
+                            {showAnswer && (
+                                <div className={`text-center p-4 rounded-lg mt-4 ${
+                                    selectedOption === flashcard.correctOption 
+                                        ? 'bg-green-100 text-green-700' 
+                                        : 'bg-red-100 text-red-700'
+                                }`}>
+                                    {selectedOption === flashcard.correctOption 
+                                        ? '✅ Correct!' 
+                                        : `❌ Incorrect. The correct answer is: ${flashcard.correctOption}`
+                                    }
+                                </div>
+                            )}
+                        </div>
+                    );
+                }
+                return null;
+
+            case 'audio':
+                return (
+                    <div className="flex flex-col items-center gap-2">
+                        <p className="title">{content}</p>
+                        <audio 
+                            controls 
+                            src={flashcard.audioUrl}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </div>
+                );
+
+            default:
+                return (
+                    <div className="flex flex-col items-center gap-2">
+                        <p className="title">{content}</p>
+                        {side === 'front' && (
+                            <div className="flex items-center justify-center gap-2 mt-2">
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        speakText(content);
+                                    }}
+                                    className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${speaking ? 'text-blue-500' : ''}`}
+                                    disabled={speaking}
+                                    aria-label="Listen to pronunciation"
+                                >
+                                    <IoVolumeHighOutline size={24} />
+                                </button>
+                                <span className="text-gray-500">
+                                    {phonetic || content}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                );
+        }
+    };
+
     const nextCard = () => {
         setCurrentCard((prev) => (prev + 1) % flashcards.length);
+        setIsFlipped(false);
+        setShowAnswer(false);
+        setSelectedOption('');
+        setUserAnswer('');
+        setShowImageAnswer(false);
     };
 
     const prevCard = () => {
         setCurrentCard((prev) => (prev - 1 + flashcards.length) % flashcards.length);
+        setIsFlipped(false);
+        setShowAnswer(false);
+        setSelectedOption('');
+        setUserAnswer('');
+        setShowImageAnswer(false);
     };
 
     return(
@@ -140,52 +296,55 @@ const FlashcardPage = () => {
                 </Link>
             </div>
             {flashcards.length > 0 ? (
-                <div className='flex items-center justify-center w-full pt-10 md:pt-32'>
-                    <button 
-                        onClick={prevCard}
-                        className="mx-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                        aria-label="Previous card"
-                    >
-                        <IoChevronBackOutline size={24} />
-                    </button>
+                <div className='flex flex-col items-center justify-center w-full pt-10 md:pt-32'>
+                    <div className='flex items-center justify-center w-full max-w-4xl px-4'>
+                        <button 
+                            onClick={prevCard}
+                            className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                            aria-label="Previous card"
+                        >
+                            <IoChevronBackOutline size={28} />
+                        </button>
 
-                    <div 
-                        className={`flip-card ${isFlipped ? 'flipped' : ''}`} 
-                        onClick={() => setIsFlipped(!isFlipped)}
-                    >
-                        <div className="flip-card-inner">
-                            <div className="flip-card-front">
-                                <p className="title">{flashcards[currentCard].front}</p>
-                                <div className="flex items-center justify-center gap-2 mt-2">
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            speakText(flashcards[currentCard].front);
-                                        }}
-                                        className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${speaking ? 'text-blue-500' : ''}`}
-                                        disabled={speaking}
-                                        aria-label="Listen to pronunciation"
-                                    >
-                                        <IoVolumeHighOutline size={24} />
-                                    </button>
-                                    <span className="text-gray-500">
-                                        {phonetic || flashcards[currentCard].front}
-                                    </span>
+                        <div className='flex-1 flex justify-center mx-8'>
+                            {flashcards[currentCard].type === 'multipleChoice' ? (
+                                <div className="w-full max-w-xl px-4">
+                                    {renderFlashcardContent(flashcards[currentCard], 'front')}
                                 </div>
-                            </div>
-                            <div className="flip-card-back">
-                                <p className="title">{flashcards[currentCard].back}</p>
-                            </div>
+                            ) : flashcards[currentCard].type === 'image' ? (
+                                <div className="w-full max-w-xl px-4">
+                                    {renderFlashcardContent(flashcards[currentCard], 'front')}
+                                </div>
+                            ) : (
+                                <div 
+                                    className={`flip-card ${isFlipped ? 'flipped' : ''}`} 
+                                    onClick={() => setIsFlipped(!isFlipped)}
+                                >
+                                    <div className="flip-card-inner">
+                                        <div className="flip-card-front">
+                                            {renderFlashcardContent(flashcards[currentCard], 'front')}
+                                        </div>
+                                        <div className="flip-card-back">
+                                            {renderFlashcardContent(flashcards[currentCard], 'back')}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
 
-                    <button 
-                        onClick={nextCard}
-                        className="mx-4 p-2 rounded-full hover:bg-gray-100 transition-colors"
-                        aria-label="Next card"
-                    >
-                        <IoChevronForwardOutline size={24} />
-                    </button>
+                        <button 
+                            onClick={nextCard}
+                            className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                            aria-label="Next card"
+                        >
+                            <IoChevronForwardOutline size={28} />
+                        </button>
+                    </div>
+                    
+                    {/* Card counter */}
+                    <div className="mt-6 text-gray-500">
+                        {currentCard + 1} / {flashcards.length}
+                    </div>
                 </div>
             ) : (
                 <div className="pt-20 md:pt-40">No flashcards available for this lesson.</div>

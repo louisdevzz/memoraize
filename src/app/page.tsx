@@ -1,11 +1,10 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState,useCallback } from 'react';
-import { FiEdit, FiTrash2, FiBook, FiBookOpen, FiLayers } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiBook, FiBookOpen, FiLayers, FiPlus, FiLogOut } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || '';
+import Modal from '@/components/Modal';
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -13,6 +12,8 @@ export default function Home() {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [lessonToDelete, setLessonToDelete] = useState<any>(null);
 
   useEffect(() => {
     // Check for token in localStorage
@@ -99,10 +100,14 @@ export default function Home() {
   return (
     <main className="min-h-screen p-4 md:p-24">
       <div className="flex flex-col items-center gap-4">
-        <h1 className="text-4xl font-bold text-center">Welcome to Flashcards</h1>
+        <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
+          Welcome to Flashcards
+        </h1>
         
         {isLoggedIn && userName && (
-          <p className="text-lg text-gray-600">Welcome back, {userName}!</p>
+          <p className="text-lg bg-gradient-to-r from-green-500 to-teal-500 text-transparent bg-clip-text">
+            Welcome back, {userName}!
+          </p>
         )}
         
         {!isLoggedIn && (
@@ -123,8 +128,8 @@ export default function Home() {
         {isLoggedIn && (
           <div className="flex flex-row justify-end w-full gap-4">
             <Link href="/flashcards/create">
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
-                Create Flashcard
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-md flex items-center gap-2">
+                <FiPlus size={20} /> Create Flashcard
               </button>
             </Link>
             <button 
@@ -132,9 +137,9 @@ export default function Home() {
                 localStorage.removeItem('token');
                 setIsLoggedIn(false);
               }}
-              className="bg-red-500 text-white px-4 py-2 rounded-md"
+              className="bg-red-500 text-white px-4 py-2 rounded-md flex items-center gap-2"
             >
-              Logout
+              <FiLogOut size={20} /> Logout
             </button>
           </div>
         )}
@@ -168,29 +173,10 @@ export default function Home() {
                 </button>
                 <button 
                   className="p-2 hover:bg-black/10 rounded-full transition-colors duration-300"
-                  onClick={async (e) => {
+                  onClick={(e) => {
                     e.stopPropagation();
-                    if (confirm('Are you sure you want to delete this flashcard?')) {
-                      try {
-                        const token = localStorage.getItem('token');
-                        const response = await fetch(`/api/flashcards?slug=${lesson.slug}`, {
-                          method: 'DELETE',
-                          headers: {
-                            'Authorization': `Bearer ${token}`
-                          }
-                        });
-
-                        if (!response.ok) {
-                          throw new Error('Failed to delete lesson');
-                        }
-
-                        // Refresh the lessons list
-                        fetchLessons();
-                      } catch (error) {
-                        console.error('Error deleting lesson:', error);
-                        alert('Failed to delete lesson');
-                      }
-                    }
+                    setLessonToDelete(lesson);
+                    setIsDeleteModalOpen(true);
                   }}
                 >
                   <FiTrash2 size={16} className="text-red-500" />
@@ -200,6 +186,39 @@ export default function Home() {
           ))}
         </div>
       </div>
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setLessonToDelete(null);
+        }}
+        onConfirm={async () => {
+          try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/flashcards?slug=${lessonToDelete.slug}`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to delete lesson');
+            }
+
+            // Refresh the lessons list
+            fetchLessons();
+            setIsDeleteModalOpen(false);
+            setLessonToDelete(null);
+          } catch (error) {
+            console.error('Error deleting lesson:', error);
+            alert('Failed to delete lesson');
+          }
+        }}
+        title="Delete Flashcard"
+        message="Are you sure you want to delete this flashcard? This action cannot be undone."
+        itemName={lessonToDelete?.title}
+      />
     </main>
   );
 }
