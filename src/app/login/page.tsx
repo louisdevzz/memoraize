@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const LoginPage = () => {
   const router = useRouter();
@@ -84,7 +85,9 @@ const LoginPage = () => {
         >
           {loading ? 'Loading...' : 'Login'}
         </button>
+        <p className="text-center mt-4">Don't have an account? <Link className="text-blue-500" href="/register">Register</Link></p>
       </form>
+      
     </div>
   );
 };
