@@ -11,7 +11,8 @@ const CreateFlashcardPage = () => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        flashcards: [createEmptyFlashcard()]
+        flashcards: [createEmptyFlashcard()],
+        visibility: 'private' as 'public' | 'private'
     });
     const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const [uploadingFiles, setUploadingFiles] = useState<{ [key: number]: boolean }>({});
@@ -29,7 +30,7 @@ const CreateFlashcardPage = () => {
         } as Flashcard;
     }
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -445,7 +446,12 @@ const CreateFlashcardPage = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    title: formData.title,
+                    description: formData.description,
+                    flashcards: formData.flashcards,
+                    visibility: formData.visibility
+                }),
             });
 
             if (response.ok) {
@@ -498,6 +504,21 @@ const CreateFlashcardPage = () => {
                         rows={3}
                         required
                     />
+                </div>
+
+                <div>
+                    <label htmlFor="visibility" className="block mb-2">Visibility</label>
+                    <select
+                        id="visibility"
+                        name="visibility"
+                        value={formData.visibility}
+                        onChange={handleInputChange}
+                        className="w-full p-2 border rounded"
+                        required
+                    >
+                        <option value="private">Private - Only you can see this</option>
+                        <option value="public">Public - Anyone can see this</option>
+                    </select>
                 </div>
 
                 <div className="space-y-4">

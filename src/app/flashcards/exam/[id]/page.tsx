@@ -34,19 +34,27 @@ const ExamPage = () => {
     const [imageLoading, setImageLoading] = useState(true);
 
     const fetchLessons = useCallback(async () => {
-        const token = localStorage.getItem('token');
+        try {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                router.push('/login');
+                return;
+            }
+
+            const response = await fetch(`/api/flashcards/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch lesson');
+            }
         
-        if (!token) {
-            router.push('/login');
-            return;
+            const data = await response.json();
+            setLessons([data]);
+        } catch (error) {
+            console.error('Error fetching lesson:', error);
         }
-        const response = await fetch('/api/flashcards/byUser', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-    
-        const data = await response.json();
-        const filteredLessons = data.filter((lesson: any) => lesson.slug === id);
-        setLessons(filteredLessons);
     }, [router, id]);
     
     useEffect(() => {

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState,useCallback } from 'react';
-import { FiEdit, FiTrash2, FiBook, FiBookOpen, FiLayers, FiPlus, FiLogOut, FiCpu } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiBook, FiBookOpen, FiLayers, FiPlus, FiLogOut, FiCpu, FiCompass } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import jwt from 'jsonwebtoken';
 import Modal from '@/components/Modal';
@@ -66,9 +66,6 @@ export default function Home() {
       <div className='loader'></div>
     </div>;
   }
-  if(lessons.length === 0){
-    return <div>No lessons found</div>;
-  }
 
   const getRandomColor = () => {
     const colors = [
@@ -127,6 +124,11 @@ export default function Home() {
         
         {isLoggedIn && (
           <div className="flex flex-row justify-end w-full gap-4">
+            <Link href="/explore">
+              <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2">
+                <FiCompass size={20} /> Explore
+              </button>
+            </Link>
             <Link href="/flashcards/create-by-ai">
               <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center gap-2">
                 <FiCpu size={20} /> Create by AI
@@ -149,6 +151,11 @@ export default function Home() {
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+          {lessons.length === 0 && (
+            <div className="col-span-full text-center text-gray-500 py-10">
+              No lessons found.
+            </div>
+          )}
           {lessons.map((lesson: any) => (
             <div 
               key={lesson._id}

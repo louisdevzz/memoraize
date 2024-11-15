@@ -39,6 +39,7 @@ export interface ILesson extends Document {
   updatedAt: Date;
   userId: string;
   slug: string;
+  visibility: 'public' | 'private';
 }
 
 // Delete existing model if it exists in a development environment
@@ -96,6 +97,12 @@ const LessonSchema = new mongoose.Schema({
   },
   slug: {
     type: String,
+    required: true,
+  },
+  visibility: {
+    type: String,
+    enum: ['public', 'private'],
+    default: 'private',
     required: true,
   }
 }, { timestamps: true });

@@ -22,10 +22,19 @@ async function verifyAuth() {
     }
 }
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
     try {
-        await connectDB();
-        const lessons = await Lesson.find().sort({ createdAt: -1 });
+        const { searchParams } = new URL(request.url);
+        const visibility = searchParams.get('visibility');
+        
+        const query = visibility === 'public' 
+            ? { visibility: 'public' }
+            : {};
+            
+        const lessons = await Lesson.find(query)
+            .sort({ createdAt: -1 })
+            .select('title description flashcards createdAt slug');
+            
         return NextResponse.json(lessons);
     } catch (error) {
         console.error('Error fetching lessons:', error);
@@ -53,8 +62,9 @@ export async function POST(req: Request) {
 
         // Parse request body
         const body = await req.json();
-        const { title, description, flashcards } = body;
+        const { title, description, flashcards, visibility } = body;
         const userId = await verifyAuth();
+        
         // Validate required fields
         if (!title || !description || !flashcards || flashcards.length === 0) {
             return NextResponse.json(
@@ -76,12 +86,13 @@ export async function POST(req: Request) {
             );
         }
 
-        // Create new lesson
+        // Create new lesson with visibility
         const lesson = await Lesson.create({
             title,
             description,
             flashcards,
             userId,
+            visibility: visibility || 'private',
             slug: title.toLowerCase().replace(/ /g, '-')
         });
 
@@ -112,7 +123,7 @@ export async function PUT(req: Request) {
 
         // Parse request body
         const body = await req.json();
-        const { title, description, flashcards, slug } = body;
+        const { title, description, flashcards, slug, visibility } = body;
         const userId = await verifyAuth();
 
         // Validate required fields
@@ -143,6 +154,7 @@ export async function PUT(req: Request) {
                 title,
                 description,
                 flashcards,
+                visibility: visibility || 'private',
                 slug: title.toLowerCase().replace(/ /g, '-')
             },
             { new: true }

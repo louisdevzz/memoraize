@@ -28,16 +28,34 @@ export async function GET(
 ) {    
     try {
         const { id } = params;
-        const userId = await verifyAuth();
         await connectDB();
 
-        const lesson = await Lesson.findOne({ slug: id, userId });
+        // First try to find the lesson without userId filter
+        const lesson = await Lesson.findOne({ slug: id });
 
         if (!lesson) {
             return NextResponse.json(
-                { error: 'Lesson not found or unauthorized' },
+                { error: 'Lesson not found' },
                 { status: 404 }
             );
+        }
+
+        // If lesson is private, verify ownership
+        if (lesson.visibility === 'private') {
+            try {
+                const userId = await verifyAuth();
+                if (lesson.userId !== userId) {
+                    return NextResponse.json(
+                        { error: 'Unauthorized to view this private lesson' },
+                        { status: 403 }
+                    );
+                }
+            } catch (error) {
+                return NextResponse.json(
+                    { error: 'Unauthorized to view this private lesson' },
+                    { status: 403 }
+                );
+            }
         }
 
         return NextResponse.json(lesson);
