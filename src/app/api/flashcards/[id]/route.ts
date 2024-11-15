@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Lesson from "@/models/Lesson";
 import jwt from 'jsonwebtoken';
@@ -22,13 +22,13 @@ async function verifyAuth() {
     }
 }
 
+
 export async function GET(
-    request: Request,
-    context: { params: { id: string } }
-) {
-    const { id } = await Promise.resolve(context.params);
-    
+    request: NextRequest,
+    { params }: any
+) {    
     try {
+        const { id } = params;
         const userId = await verifyAuth();
         await connectDB();
 

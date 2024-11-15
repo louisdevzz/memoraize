@@ -18,21 +18,28 @@ const FlashcardPage = () => {
     const router = useRouter();
     const [currentCard, setCurrentCard] = useState(0);
     const [lessons, setLessons] = useState<Lesson[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
     const fetchLessons = useCallback(async () => {
-        const token = localStorage.getItem('token');
+        try {
+            const token = localStorage.getItem('token');
+            setIsLoading(true);
+            if (!token) {
+                router.push('/login');
+                return;
+            }
+            const response = await fetch('/api/flashcards/byUser', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
         
-        if (!token) {
-            router.push('/login');
-            return;
+            const data = await response.json();
+            const filteredLessons = data.filter((lesson: any) => lesson.slug === id);
+            setLessons(filteredLessons);
+        } catch (error) {
+            console.error('Error fetching lessons:', error);
+        } finally {
+            setIsLoading(false);
         }
-        const response = await fetch('/api/flashcards/byUser', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-    
-        const data = await response.json();
-        const filteredLessons = data.filter((lesson: any) => lesson.slug === id);
-        setLessons(filteredLessons);
     }, [router, id]);
     
     useEffect(() => {
@@ -41,8 +48,16 @@ const FlashcardPage = () => {
 
     //console.log(lessons);
 
+    if(isLoading){
+        return <div className="min-h-screen flex justify-center items-center">
+            <div className='loader'></div>
+        </div>;
+    }
+
     if (lessons.length === 0) {
-        return <div className="flex justify-center items-center h-screen">Loading...</div>;
+        return <div className="min-h-screen flex justify-center items-center">
+            No lessons found
+        </div>;
     }
 
     const flashcards = lessons[0]?.flashcards || [];
