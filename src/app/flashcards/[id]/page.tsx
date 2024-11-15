@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { IoChevronBackOutline, IoChevronForwardOutline } from "react-icons/io5";
 import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/dist/client/link';
 
 interface Lesson {
     slug: string;
@@ -38,7 +39,7 @@ const FlashcardPage = () => {
         fetchLessons();
     }, [fetchLessons]);
 
-    console.log(lessons);
+    //console.log(lessons);
 
     if (lessons.length === 0) {
         return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -57,6 +58,11 @@ const FlashcardPage = () => {
     return(
         <div className='flex flex-col items-center pt-10 px-20 h-screen'>
             <h1 className='text-2xl font-bold'>Lesson {id}</h1>
+            <div className='flex items-center justify-end w-full'>
+                <Link href={`/flashcards/exam/${id}`}>
+                    <button className='bg-blue-500 text-white px-4 py-2 rounded-md'>Exam lesson</button>
+                </Link>
+            </div>
             {flashcards.length > 0 ? (
                 <div className='flex items-center justify-center w-full pt-40'>
                     <button 

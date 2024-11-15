@@ -4,7 +4,8 @@ import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import User, { IUser } from '@/models/User';
 
-const JWT_SECRET = 'flashcards'; // In production, use environment variable
+const JWT_SECRET = process.env.NEXTAUTH_SECRET || ''; // In production, use environment variable
+
 
 export async function POST(req: Request) {
   try {

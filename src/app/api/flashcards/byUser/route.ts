@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import jwt from 'jsonwebtoken';
 import { headers } from 'next/headers';
 
-const JWT_SECRET = 'flashcards'; // Should match the one in auth routes
+const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'flashcards'; // Should match the one in auth routes
 
 async function verifyAuth() {
     const headersList = await headers();
