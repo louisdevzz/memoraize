@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
         await client.end();
 
-        const fileUrl = `/api/files/${rows[0].id}/${filename}`;
+        const fileUrl = `/api/files?id=${rows[0].id}&filename=${filename}`;
 
         return NextResponse.json({ 
             url: fileUrl
