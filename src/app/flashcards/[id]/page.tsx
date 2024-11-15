@@ -28,24 +28,40 @@ const FlashcardPage = () => {
     const [showAnswer, setShowAnswer] = useState(false);
     const [userAnswer, setUserAnswer] = useState('');
     const [showImageAnswer, setShowImageAnswer] = useState(false);
+    const [imageLoading, setImageLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const fetchLessons = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
             setIsLoading(true);
+            setError(null);
+
             if (!token) {
                 router.push('/login');
                 return;
             }
+
             const response = await fetch('/api/flashcards/byUser', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
         
+            if (!response.ok) {
+                throw new Error('Failed to fetch lessons');
+            }
+
             const data = await response.json();
             const filteredLessons = data.filter((lesson: any) => lesson.slug === id);
+            
+            if (filteredLessons.length === 0) {
+                setError('Lesson not found');
+            }
+            
             setLessons(filteredLessons);
         } catch (error) {
             console.error('Error fetching lessons:', error);
+            setError('Failed to load lesson');
         } finally {
             setIsLoading(false);
         }
@@ -97,10 +113,89 @@ const FlashcardPage = () => {
         }
     }, [currentCard, flashcards, getPhonetic]);
 
-    if(isLoading){
-        return <div className="min-h-screen flex justify-center items-center">
-            <div className='loader'></div>
-        </div>;
+    useEffect(() => {
+        if (flashcards[currentCard]?.type === 'image') {
+            setImageLoading(true);
+        }
+    }, [currentCard, flashcards]);
+
+    const handleDelete = async () => {
+        if (!window.confirm('Are you sure you want to delete this lesson?')) {
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/flashcards/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                router.push('/');
+            } else {
+                throw new Error('Failed to delete lesson');
+            }
+        } catch (error) {
+            console.error('Error deleting lesson:', error);
+            alert('Failed to delete lesson');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') {
+                prevCard();
+            } else if (e.key === 'ArrowRight') {
+                nextCard();
+            } else if (e.key === ' ' && 
+                flashcards[currentCard].type !== 'multipleChoice' && 
+                flashcards[currentCard].type !== 'image') {
+                setIsFlipped(!isFlipped);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [currentCard, isFlipped, flashcards]);
+
+    useEffect(() => {
+        // Reset state when component mounts or id changes
+        setCurrentCard(0);
+        setIsFlipped(false);
+        setShowAnswer(false);
+        setSelectedOption('');
+        setUserAnswer('');
+        setShowImageAnswer(false);
+        
+        // Cleanup function when component unmounts
+        return () => {
+            window.speechSynthesis.cancel(); // Cancel any ongoing speech
+        };
+    }, [id]); // Only run when id changes or component mounts/unmounts
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen flex justify-center items-center">
+                <div className='loader'></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex flex-col gap-4 justify-center items-center">
+                <p className="text-red-500">{error}</p>
+                <Link href="/">
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
+                        Return Home
+                    </button>
+                </Link>
+            </div>
+        );
     }
 
     if (lessons.length === 0) {
@@ -123,7 +218,13 @@ const FlashcardPage = () => {
                                 width={300}
                                 height={300}
                                 className="rounded-lg mx-auto"
+                                onLoadingComplete={() => setImageLoading(false)}
                             />
+                            {imageLoading && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
+                                    <div className="loader"></div>
+                                </div>
+                            )}
                             <p className="text-sm mt-2 text-center">{content}</p>
                         </div>
                         
@@ -284,9 +385,13 @@ const FlashcardPage = () => {
                         Edit lesson
                     </button>
                 </Link>
-                <button className='w-full md:w-auto bg-red-500 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2'>
+                <button 
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className='w-full md:w-auto bg-red-500 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2 disabled:opacity-50'
+                >
                     <IoTrashOutline />
-                    Delete lesson
+                    {isDeleting ? 'Deleting...' : 'Delete lesson'}
                 </button>
                 <Link href={`/`} className='w-full md:w-auto'>
                     <button className='w-full bg-blue-500 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2'>

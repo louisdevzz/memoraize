@@ -1,16 +1,30 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { existsSync } from 'fs';
+import { createClient } from '@vercel/postgres';
 
 export async function POST(request: Request) {
     try {
+        const client = createClient();
+        await client.connect();
+
+        // Create table if it doesn't exist
+        await client.sql`
+            CREATE TABLE IF NOT EXISTS uploads (
+                id SERIAL PRIMARY KEY,
+                filename VARCHAR(255) NOT NULL,
+                file_type VARCHAR(50) NOT NULL,
+                content_type VARCHAR(255) NOT NULL,
+                data TEXT NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+
         const formData = await request.formData();
         const file = formData.get('file') as File;
-        const fileType = formData.get('fileType') as string; // 'image' or 'audio'
+        const fileType = formData.get('fileType') as string;
 
         if (!file) {
+            await client.end();
             return NextResponse.json(
                 { error: "No file uploaded" },
                 { status: 400 }
@@ -19,6 +33,7 @@ export async function POST(request: Request) {
 
         // Validate file type
         if (fileType === 'image' && !file.type.startsWith('image/')) {
+            await client.end();
             return NextResponse.json(
                 { error: "File must be an image" },
                 { status: 400 }
@@ -26,26 +41,35 @@ export async function POST(request: Request) {
         }
 
         if (fileType === 'audio' && !file.type.startsWith('audio/')) {
+            await client.end();
             return NextResponse.json(
                 { error: "File must be an audio file" },
                 { status: 400 }
             );
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const filename = `${uuidv4()}${path.extname(file.name)}`;
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
         
-        // Create uploads directory based on file type
-        const uploadDir = path.join(process.cwd(), 'public/uploads', fileType);
-        if (!existsSync(uploadDir)) {
-            await mkdir(uploadDir, { recursive: true });
-        }
+        // Generate unique filename
+        const filename = `${uuidv4()}${file.name.substring(file.name.lastIndexOf('.'))}`;
+        
+        // Convert buffer to base64 string
+        const base64Data = buffer.toString('base64');
+        
+        // Store file metadata in Vercel Postgres
+        const { rows } = await client.sql`
+            INSERT INTO uploads (filename, file_type, content_type, data)
+            VALUES (${filename}, ${fileType}, ${file.type}, ${base64Data})
+            RETURNING id, filename
+        `;
 
-        // Save file
-        await writeFile(path.join(uploadDir, filename), buffer);
+        await client.end();
+
+        const fileUrl = `/api/files/${rows[0].id}/${filename}`;
 
         return NextResponse.json({ 
-            url: `/uploads/${fileType}/${filename}`
+            url: fileUrl
         });
     } catch (error) {
         console.error('Error uploading file:', error);

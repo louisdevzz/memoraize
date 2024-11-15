@@ -14,6 +14,8 @@ const CreateFlashcardPage = () => {
         flashcards: [createEmptyFlashcard()]
     });
     const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const [uploadingFiles, setUploadingFiles] = useState<{ [key: number]: boolean }>({});
+    const [imageLoading, setImageLoading] = useState<{ [key: number]: boolean }>({});
 
     function createEmptyFlashcard(): Flashcard {
         return {
@@ -115,6 +117,10 @@ const CreateFlashcardPage = () => {
 
     const handleFileUpload = async (index: number, file: File, fileType: 'image' | 'audio') => {
         try {
+            setUploadingFiles(prev => ({ ...prev, [index]: true }));
+            if (fileType === 'image') {
+                setImageLoading(prev => ({ ...prev, [index]: true }));
+            }
             const formData = new FormData();
             formData.append('file', file);
             formData.append('fileType', fileType);
@@ -132,6 +138,8 @@ const CreateFlashcardPage = () => {
             handleFlashcardChange(index, fileType === 'image' ? 'imageUrl' : 'audioUrl', data.url);
         } catch (error) {
             console.error(`Error uploading ${fileType}:`, error);
+        } finally {
+            setUploadingFiles(prev => ({ ...prev, [index]: false }));
         }
     };
 
@@ -160,20 +168,43 @@ const CreateFlashcardPage = () => {
                                     <button
                                         type="button"
                                         onClick={() => fileInputRefs.current[index]?.click()}
-                                        className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md"
+                                        disabled={uploadingFiles[index]}
+                                        className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
-                                        Choose Image
+                                        {uploadingFiles[index] ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                                                Uploading...
+                                            </>
+                                        ) : (
+                                            'Choose Image'
+                                        )}
                                     </button>
                                     {flashcard.imageUrl && (
-                                        <div className="relative w-24 h-24">
+                                        <div className="relative w-24 h-24 bg-gray-100 rounded-md">
+                                            {(imageLoading[index] || uploadingFiles[index]) && (
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                    <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                                </div>
+                                            )}
                                             <img
                                                 src={flashcard.imageUrl}
                                                 alt="Uploaded preview"
-                                                className="w-full h-full object-cover rounded-md"
+                                                className={`w-full h-full object-cover rounded-md transition-opacity duration-200 ${
+                                                    imageLoading[index] ? 'opacity-0' : 'opacity-100'
+                                                }`}
+                                                onLoad={() => setImageLoading(prev => ({ ...prev, [index]: false }))}
+                                                onError={() => {
+                                                    setImageLoading(prev => ({ ...prev, [index]: false }));
+                                                    console.error('Error loading image');
+                                                }}
                                             />
                                             <button
                                                 type="button"
-                                                onClick={() => handleFlashcardChange(index, 'imageUrl', '')}
+                                                onClick={() => {
+                                                    handleFlashcardChange(index, 'imageUrl', '');
+                                                    setImageLoading(prev => ({ ...prev, [index]: false }));
+                                                }}
                                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
                                             >
                                                 <IoClose size={16} />
@@ -203,7 +234,7 @@ const CreateFlashcardPage = () => {
                             />
                         </div>
                         <div>
-                            <label className="block mb-1">Translation</label>
+                            <label className="block mb-1">Answer</label>
                             <input
                                 type="text"
                                 value={flashcard.back}
@@ -306,9 +337,17 @@ const CreateFlashcardPage = () => {
                                     <button
                                         type="button"
                                         onClick={() => fileInputRefs.current[index]?.click()}
-                                        className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md"
+                                        disabled={uploadingFiles[index]}
+                                        className="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-2"
                                     >
-                                        Choose Audio File
+                                        {uploadingFiles[index] ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                                                Uploading...
+                                            </>
+                                        ) : (
+                                            'Choose Audio File'
+                                        )}
                                     </button>
                                     {flashcard.audioUrl && (
                                         <div className="flex items-center gap-2">
@@ -512,10 +551,17 @@ const CreateFlashcardPage = () => {
 
                 <button
                     type="submit"
-                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     disabled={isLoading}
                 >
-                    {isLoading ? 'Creating...' : 'Create Lesson'}
+                    {isLoading ? (
+                        <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Creating...
+                        </>
+                    ) : (
+                        'Create Lesson'
+                    )}
                 </button>
             </form>
         </div>
