@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState,useCallback } from 'react';
-import { FiEdit, FiTrash2, FiBook, FiBookOpen, FiLayers, FiPlus, FiLogOut } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiBook, FiBookOpen, FiLayers, FiPlus, FiLogOut, FiCpu } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import jwt from 'jsonwebtoken';
 import Modal from '@/components/Modal';
@@ -127,6 +127,11 @@ export default function Home() {
         
         {isLoggedIn && (
           <div className="flex flex-row justify-end w-full gap-4">
+            <Link href="/flashcards/create-by-ai">
+              <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center gap-2">
+                <FiCpu size={20} /> Create by AI
+              </button>
+            </Link>
             <Link href="/flashcards/create">
               <button className="bg-blue-500 text-white px-4 py-2 rounded-md flex items-center gap-2">
                 <FiPlus size={20} /> Create Flashcard
