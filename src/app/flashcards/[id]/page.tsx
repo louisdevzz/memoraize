@@ -191,7 +191,7 @@ const FlashcardPage = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen flex justify-center items-center">
-                <div className='loader'></div>
+                <div className="loader"></div>
             </div>
         );
     }
@@ -233,7 +233,7 @@ const FlashcardPage = () => {
                             />
                             {imageLoading && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
-                                    <div className="loader"></div>
+                                    <div className="loader-sm"></div>
                                 </div>
                             )}
                             <p className="text-sm mt-2 text-center">{content}</p>

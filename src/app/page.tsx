@@ -1,32 +1,17 @@
 'use client';
-import Link from 'next/link';
 import { useEffect, useState,useCallback } from 'react';
-import { FiEdit, FiTrash2, FiBook, FiBookOpen, FiLayers, FiPlus, FiLogOut, FiCpu, FiCompass } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiBook, FiLayers, FiGrid, FiList, FiSearch, FiFolder, FiTrash } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
-import jwt from 'jsonwebtoken';
 import Modal from '@/components/Modal';
+import Header from '@/components/Header';
+import Landing from '@/components/Landing';
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userName, setUserName] = useState('');
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [lessonToDelete, setLessonToDelete] = useState<any>(null);
-
-  useEffect(() => {
-    // Check for token in localStorage
-    const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-    try {
-      const decoded = jwt.decode(token || '');
-      //@ts-ignore
-      setUserName(decoded?.email || '');
-    } catch (error) {
-      console.error('Error decoding token:', error);
-    }
-  }, []);
 
   const fetchLessons = useCallback(async () => {
     try {
@@ -95,142 +80,121 @@ export default function Home() {
 
 
   return (
-    <main className="min-h-screen p-4 md:p-24">
-      <div className="flex flex-col items-center gap-4">
-        <h1 className="text-4xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-          Welcome to Flashcards
-        </h1>
-        
-        {isLoggedIn && userName && (
-          <p className="text-lg bg-gradient-to-r from-green-500 to-teal-500 text-transparent bg-clip-text">
-            Welcome back, {userName}!
-          </p>
-        )}
-        
-        {!isLoggedIn && (
-          <div className="flex flex-row justify-end w-full gap-4">
-            <Link href="/login">
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
-                Login
-              </button>
-            </Link>
-            <Link href="/register">
-              <button className="bg-green-500 text-white px-4 py-2 rounded-md">
-                Register
-              </button>
-            </Link>
-          </div>
-        )}
-        
-        {isLoggedIn && (
-          <div className="flex flex-row justify-end w-full gap-4">
-            <Link href="/explore">
-              <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2">
-                <FiCompass size={20} /> Explore
-              </button>
-            </Link>
-            <Link href="/flashcards/create-by-ai">
-              <button className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center gap-2">
-                <FiCpu size={20} /> Create by AI
-              </button>
-            </Link>
-            <Link href="/flashcards/create">
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-md flex items-center gap-2">
-                <FiPlus size={20} /> Create Flashcard
-              </button>
-            </Link>
-            <button 
-              onClick={() => {
-                localStorage.removeItem('token');
-                setIsLoggedIn(false);
-                router.push('/login');
-              }}
-              className="bg-red-500 text-white px-4 py-2 rounded-md flex items-center gap-2"
-            >
-              <FiLogOut size={20} /> Logout
-            </button>
-          </div>
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-          {lessons.length === 0 && (
-            <div className="col-span-full text-center text-gray-500 py-10">
-              No lessons found.
-            </div>
-          )}
-          {lessons.map((lesson: any) => (
-            <div 
-              key={lesson._id}
-              className={`${getRandomColor()} min-h-[12rem] rounded-md p-3 relative cursor-pointer shadow-sm transition-all duration-300`}
-              onClick={() => window.location.href = `/flashcards/${lesson.slug}`}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <FiBook size={20} className="text-gray-700" />
-                <span className="font-semibold text-gray-800">{lesson.title}</span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600 mb-2">
-                <FiLayers size={16} />
-                <span className="text-sm">Click to study</span>
-              </div>
-              <p className="text-sm text-gray-700 line-clamp-2 mb-8">
-                {lesson.description || 'No description available'}
-              </p>
-              <div className="absolute bottom-3 right-3 flex gap-2">
-                <button 
-                  className="p-2 hover:bg-black/10 rounded-full transition-colors duration-300"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    window.location.href = `/flashcards/edit/${lesson.slug}`;
-                  }}
-                >
-                  <FiEdit size={16} className="text-gray-700" />
-                </button>
-                <button 
-                  className="p-2 hover:bg-black/10 rounded-full transition-colors duration-300"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLessonToDelete(lesson);
-                    setIsDeleteModalOpen(true);
-                  }}
-                >
-                  <FiTrash2 size={16} className="text-red-500" />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <Modal
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setLessonToDelete(null);
-        }}
-        onConfirm={async () => {
-          try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/api/flashcards/${lessonToDelete.slug}`, {
-              method: 'DELETE',
-              headers: {
-                'Authorization': `Bearer ${token}`
-              }
-            });
+    // <div className='bg-gray-50'>
+    //   <Header />
+    //   <main className="min-h-screen p-4 container mx-auto">
+    //     <div className="flex flex-col items-center gap-4 bg-white rounded-md p-4"> 
+    //       <div className='flex flex-row justify-between items-center w-full border-b pb-2'>
+    //         <h1 className='text-2xl font-bold'>My Lessons</h1>
+    //         <div className='flex gap-2'>
+    //           <button className="border px-3 py-1.5 rounded flex items-center gap-1 hover:bg-gray-50">
+    //             <FiFolder size={16} />
+    //             New folder
+    //           </button>
+    //           <button className="border px-3 py-1.5 rounded flex items-center gap-1 hover:bg-gray-50">
+    //             <FiTrash size={16} />
+    //             Recycle Bin
+    //           </button>
+    //           <div className="relative flex items-center">
+    //             <input 
+    //               type="text" 
+    //               placeholder="Search my activities..." 
+    //               className="border rounded px-3 py-1.5 pr-8"
+    //             />
+    //             <FiSearch size={16} className="absolute right-2 text-gray-400" />
+    //           </div>
+    //           <div className="flex gap-1">
+    //             <button className="border p-1.5 rounded hover:bg-gray-50">
+    //               <FiGrid size={16} />
+    //             </button>
+    //             <button className="border p-1.5 rounded hover:bg-gray-50">
+    //               <FiList size={16} />
+    //             </button>
+    //           </div>
+    //         </div>
+    //       </div>
+    //       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full mt-5">
+    //         {lessons.length === 0 && (
+    //           <div className="col-span-full text-center text-gray-500 py-10">
+    //             No lessons found.
+    //           </div>
+    //         )}
+    //         {lessons.map((lesson: any) => (
+    //           <div 
+    //             key={lesson._id}
+    //             className={`${getRandomColor()} min-h-[12rem] rounded-md p-3 relative cursor-pointer shadow-sm transition-all duration-300`}
+    //             onClick={() => window.location.href = `/flashcards/${lesson.slug}`}
+    //           >
+    //             <div className="flex items-center gap-2 mb-2">
+    //               <FiBook size={20} className="text-gray-700" />
+    //               <span className="font-semibold text-gray-800">{lesson.title}</span>
+    //             </div>
+    //             <div className="flex items-center gap-2 text-gray-600 mb-2">
+    //               <FiLayers size={16} />
+    //               <span className="text-sm">Click to study</span>
+    //             </div>
+    //             <p className="text-sm text-gray-700 line-clamp-2 mb-8">
+    //               {lesson.description || 'No description available'}
+    //             </p>
+    //             <div className="absolute bottom-3 right-3 flex gap-2">
+    //               <button 
+    //                 className="p-2 hover:bg-black/10 rounded-full transition-colors duration-300"
+    //                 onClick={(e) => {
+    //                   e.stopPropagation();
+    //                   window.location.href = `/flashcards/edit/${lesson.slug}`;
+    //                 }}
+    //               >
+    //                 <FiEdit size={16} className="text-gray-700" />
+    //               </button>
+    //               <button 
+    //                 className="p-2 hover:bg-black/10 rounded-full transition-colors duration-300"
+    //                 onClick={(e) => {
+    //                   e.stopPropagation();
+    //                   setLessonToDelete(lesson);
+    //                   setIsDeleteModalOpen(true);
+    //                 }}
+    //               >
+    //                 <FiTrash2 size={16} className="text-red-500" />
+    //               </button>
+    //             </div>
+    //           </div>
+    //         ))}
+    //       </div>
+    //     </div>
+    //     <Modal
+    //       isOpen={isDeleteModalOpen}
+    //       onClose={() => {
+    //         setIsDeleteModalOpen(false);
+    //         setLessonToDelete(null);
+    //       }}
+    //       onConfirm={async () => {
+    //         try {
+    //           const token = localStorage.getItem('token');
+    //           const response = await fetch(`/api/flashcards/${lessonToDelete.slug}`, {
+    //             method: 'DELETE',
+    //             headers: {
+    //               'Authorization': `Bearer ${token}`
+    //             }
+    //           });
 
-            if (!response.ok) {
-              throw new Error('Failed to delete lesson');
-            }
+    //           if (!response.ok) {
+    //             throw new Error('Failed to delete lesson');
+    //           }
 
-            // Refresh the lessons list
-            fetchLessons();
-            setIsDeleteModalOpen(false);
-            setLessonToDelete(null);
-          } catch (error) {
-            console.error('Error deleting lesson:', error);
-            alert('Failed to delete lesson');
-          }
-        }}
-        title="Delete Lesson"
-        message="Are you sure you want to delete this lesson? This action cannot be undone."
-      />
-    </main>
+    //           // Refresh the lessons list
+    //           fetchLessons();
+    //           setIsDeleteModalOpen(false);
+    //           setLessonToDelete(null);
+    //         } catch (error) {
+    //           console.error('Error deleting lesson:', error);
+    //           alert('Failed to delete lesson');
+    //         }
+    //       }}
+    //       title="Delete Lesson"
+    //       message="Are you sure you want to delete this lesson? This action cannot be undone."
+    //     />
+    //   </main>
+    // </div>
+    <Landing />
   );
 }

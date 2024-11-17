@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
+import StyledComponentsRegistry from '../lib/registry'
 
 const roboto = Roboto({
   weight: ["400", "700"],
@@ -9,8 +10,8 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Flashcards",
-  description: "Flashcards",
+  title: "BrainCards",
+  description: "BrainCards - Learn anything",
 };
 
 export default function RootLayout({
@@ -23,7 +24,7 @@ export default function RootLayout({
       <body
         className={`${roboto.className} antialiased`}
       >
-        {children}
+        <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
         <Analytics />
       </body>
     </html>

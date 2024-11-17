@@ -647,7 +647,11 @@ const EditFlashcardPage = () => {
                     className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     disabled={isLoading}
                 >
-                    {isLoading ? 'Updating...' : 'Update Lesson'}
+                    {isLoading ? (
+                        <div className="loader-dots"></div>
+                    ) : (
+                        'Update Lesson'
+                    )}
                 </button>
             </form>
         </div>
