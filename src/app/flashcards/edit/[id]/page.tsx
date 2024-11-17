@@ -10,6 +10,7 @@ interface LessonForm {
     title: string;
     description: string;
     flashcards: Flashcard[];
+    visibility: 'public' | 'private';
 }
 
 const EditFlashcardPage = () => {
@@ -24,7 +25,8 @@ const EditFlashcardPage = () => {
     const [formData, setFormData] = useState<LessonForm>({
         title: '',
         description: '',
-        flashcards: []
+        flashcards: [],
+        visibility: 'private'
     });
 
     useEffect(() => {
@@ -48,6 +50,7 @@ const EditFlashcardPage = () => {
                     setFormData({
                         title: lesson.title,
                         description: lesson.description,
+                        visibility: lesson.visibility || 'private',
                         flashcards: lesson.flashcards.map((flashcard: Flashcard) => ({
                             ...flashcard,
                             options: flashcard.type === 'multipleChoice' ? (flashcard as any).options : [],
@@ -70,7 +73,7 @@ const EditFlashcardPage = () => {
         fetchLesson();
     }, [slug, router]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
@@ -573,6 +576,21 @@ const EditFlashcardPage = () => {
                         rows={3}
                         required
                     />
+                </div>
+
+                <div>
+                    <label htmlFor="visibility" className="block mb-2">Visibility</label>
+                    <select
+                        id="visibility"
+                        name="visibility"
+                        value={formData.visibility}
+                        onChange={handleInputChange}
+                        className="w-full p-2 border rounded"
+                        required
+                    >
+                        <option value="private">Private - Only you can see this</option>
+                        <option value="public">Public - Anyone can see this</option>
+                    </select>
                 </div>
 
                 <div className="space-y-4">
