@@ -10,8 +10,6 @@ export default function Home() {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [lessonToDelete, setLessonToDelete] = useState<any>(null);
 
   const fetchLessons = useCallback(async () => {
     try {

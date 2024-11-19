@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Header from "./Header";
+import Link from "next/link";
 
 export default function Landing() {
   return (
@@ -11,12 +12,12 @@ export default function Landing() {
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
             {/* Left Content */}
             <div className="flex-1 space-y-6 lg:space-y-8 text-center lg:text-left">
-              <div className="flex items-center gap-3 justify-center lg:justify-start">
+              {/* <div className="flex items-center gap-3 justify-center lg:justify-start">
                 <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-indigo-600 to-pink-500 rounded-lg flex items-center justify-center">
                   <span className="text-xl lg:text-2xl font-bold text-white">B</span>
                 </div>
                 <h2 className="text-xl lg:text-2xl font-bold">BrainCards</h2>
-              </div>
+              </div> */}
               
               <h1 className="text-4xl lg:text-7xl font-bold leading-tight">
                 Learn Anything with
@@ -29,12 +30,12 @@ export default function Landing() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <button className="px-6 py-3 lg:px-8 lg:py-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition w-full sm:w-auto">
+                <Link href="/login" className="px-6 py-3 lg:px-8 lg:py-4 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition w-full sm:w-auto">
                   Get Started Free
-                </button>
-                <button className="px-6 py-3 lg:px-8 lg:py-4 border-2 border-indigo-600 text-indigo-600 rounded-xl hover:bg-indigo-50 transition w-full sm:w-auto">
+                </Link>
+                <Link href="/explore" className="px-6 py-3 lg:px-8 lg:py-4 border-2 border-indigo-600 text-indigo-600 rounded-xl hover:bg-indigo-50 transition w-full sm:w-auto">
                   Explore Games
-                </button>
+                </Link>
               </div>
               
               {/* Stats */}
