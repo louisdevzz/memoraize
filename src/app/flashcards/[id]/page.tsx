@@ -8,12 +8,14 @@ import Link from 'next/dist/client/link';
 import Image from 'next/image';
 import { Flashcard } from '@/models/Lesson';
 import Modal from '@/components/Modal';
+import Header from '@/components/Header';
+import { useSwipeable } from 'react-swipeable';
 
 interface Lesson {
     slug: string;
     flashcards: Flashcard[];
+    title: string;
 }
-
 
 const FlashcardPage = () => {
     const params = useParams();
@@ -188,9 +190,27 @@ const FlashcardPage = () => {
         };
     }, [id]); // Only run when id changes or component mounts/unmounts
 
+    // Updated wa handlers with correct property names
+    const handlers = useSwipeable({
+        onSwipedLeft: () => nextCard(),
+        onSwipedRight: () => prevCard(),
+        touchEventOptions: { passive: false },
+        trackTouch: true,
+        trackMouse: false
+    });
+
+    // Function to generate dots
+    const renderDots = () => {
+        return (
+            <div className="text-gray-500 text-sm text-center mt-4">
+                Swipe left or right to navigate
+            </div>
+        );
+    };
+
     if (isLoading) {
         return (
-            <div className="min-h-screen flex justify-center items-center">
+            <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-pink-50 flex items-center justify-center">
                 <div className="loader"></div>
             </div>
         );
@@ -198,75 +218,112 @@ const FlashcardPage = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen flex flex-col gap-4 justify-center items-center">
+            <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-pink-50 flex flex-col gap-4 justify-center items-center">
                 <p className="text-red-500">{error}</p>
-                <Link href="/">
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded-md">
-                        Return Home
-                    </button>
+                <Link 
+                    href="/"
+                    className="group flex items-center justify-center gap-2 text-gray-500 hover:text-indigo-600 text-sm transition-all duration-300 border border-gray-200 hover:border-indigo-600/30 rounded-xl p-3 hover:bg-indigo-50/50"
+                >
+                    <IoHomeOutline size={18} />
+                    Return Home
                 </Link>
             </div>
         );
-    }
-
-    if (lessons.length === 0) {
-        return <div className="min-h-screen flex justify-center items-center">
-            No lessons found
-        </div>;
     }
 
     const renderFlashcardContent = (flashcard: Flashcard, side: 'front' | 'back') => {
         const content = side === 'front' ? flashcard.front : flashcard.back;
 
         switch (flashcard.type) {
+            case 'text':
+                return (
+                    <div className="flex flex-col items-center justify-center h-full w-full p-6 relative">
+                        <div className="absolute top-4 left-4 w-20 h-20 bg-indigo-100 rounded-full opacity-20"></div>
+                        <div className="absolute bottom-4 right-4 w-16 h-16 bg-pink-100 rounded-full opacity-20"></div>
+                        
+                        <p className="text-3xl sm:text-5xl font-bold text-gray-800 text-center mb-4 relative z-10">
+                            {content}
+                        </p>
+                        
+                        {side === 'front' && (
+                            <div className="flex items-center gap-4 mt-4">
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        speakText(content);
+                                    }}
+                                    className={`p-3 rounded-full transition-all duration-300 
+                                        ${speaking 
+                                            ? 'bg-indigo-100 text-indigo-600 scale-110' 
+                                            : 'hover:bg-indigo-50 text-gray-500 hover:text-indigo-600'
+                                        }`}
+                                    disabled={speaking}
+                                >
+                                    <IoVolumeHighOutline 
+                                        size={28} 
+                                        className={`transform transition-transform duration-300 ${speaking ? 'scale-110' : ''}`}
+                                    />
+                                </button>
+                                {phonetic && (
+                                    <span className="text-base sm:text-xl px-4 py-2 rounded-full bg-gradient-to-r from-gray-50 to-white text-gray-600 shadow-sm border border-gray-100">
+                                        {phonetic}
+                                    </span>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+
             case 'image':
                 return (
                     <div className="flex flex-col items-center gap-4 w-full max-w-md mx-auto">
-                        <div className="relative w-full">
+                        <div className="relative w-full group">
                             <Image 
                                 src={flashcard.imageUrl} 
                                 alt={content}
                                 width={300}
                                 height={300}
-                                className="rounded-lg mx-auto"
+                                className="rounded-2xl mx-auto shadow-lg transition-transform duration-300 group-hover:scale-[1.02]"
                                 onLoadingComplete={() => setImageLoading(false)}
                             />
                             {imageLoading && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80">
+                                <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-2xl">
                                     <div className="loader-sm"></div>
                                 </div>
                             )}
-                            <p className="text-sm mt-2 text-center">{content}</p>
+                            <p className="text-base mt-3 text-center font-medium text-gray-700">{content}</p>
                         </div>
                         
-                        <div className="w-full flex gap-2">
+                        <div className="w-full space-y-4">
                             <input
                                 type="text"
                                 value={userAnswer}
                                 onChange={(e) => setUserAnswer(e.target.value)}
                                 placeholder="Enter your answer"
-                                className="flex-1 p-3 border rounded-lg"
+                                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition bg-white/50"
                                 disabled={showImageAnswer}
                             />
                             <button
                                 onClick={() => setShowImageAnswer(true)}
-                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 whitespace-nowrap"
+                                className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-4 rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl disabled:opacity-50"
                                 disabled={showImageAnswer}
                             >
-                                Check
+                                Check Answer
                             </button>
                         </div>
 
                         {showImageAnswer && (
-                            <div className={`w-full p-4 rounded-lg text-center ${
+                            <div className={`w-full p-4 rounded-xl text-center transition-all duration-300 ${
                                 userAnswer.toLowerCase() === flashcard.back.toLowerCase()
-                                    ? 'bg-green-100 text-green-700'
-                                    : 'bg-red-100 text-red-700'
+                                    ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-700'
+                                    : 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-700'
                             }`}>
-                                {userAnswer.toLowerCase() === flashcard.back.toLowerCase() 
-                                    ? '✅ Correct!' 
-                                    : `❌ Incorrect. The correct answer is: ${flashcard.back}`
-                                }
+                                <p className="font-medium">
+                                    {userAnswer.toLowerCase() === flashcard.back.toLowerCase() 
+                                        ? '✨ Excellent! That\'s correct!' 
+                                        : `Not quite. The correct answer is: "${flashcard.back}"`
+                                    }
+                                </p>
                             </div>
                         )}
                     </div>
@@ -276,21 +333,23 @@ const FlashcardPage = () => {
                 if (side === 'front') {
                     return (
                         <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
-                            <p className="title text-lg font-semibold text-center">{content}</p>
+                            <p className="text-xl sm:text-3xl font-semibold text-center text-gray-800 mb-2">
+                                {content}
+                            </p>
                             <div className="flex flex-col gap-3 w-full">
                                 {flashcard.options.map((option, index) => (
                                     <button
                                         key={index}
-                                        className={`w-full p-4 rounded-lg text-center transition-all transform hover:scale-105
+                                        className={`w-full p-4 rounded-xl text-center transition-all transform hover:scale-[1.02] font-medium
                                             ${showAnswer 
                                                 ? option === flashcard.correctOption
-                                                    ? 'bg-green-100 border-2 border-green-500'
+                                                    ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-700 border-2 border-green-500'
                                                     : selectedOption === option
-                                                        ? 'bg-red-100 border-2 border-red-500'
-                                                        : 'bg-gray-100'
+                                                        ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-700 border-2 border-red-500'
+                                                        : 'bg-white/50 text-gray-500'
                                                 : selectedOption === option
-                                                    ? 'bg-blue-100 border-2 border-blue-500'
-                                                    : 'bg-gray-100 hover:bg-gray-200'
+                                                    ? 'bg-gradient-to-r from-indigo-500/20 to-indigo-600/20 text-indigo-700 border-2 border-indigo-500'
+                                                    : 'bg-white/50 hover:bg-white/80 text-gray-700'
                                             }
                                         `}
                                         onClick={() => {
@@ -306,15 +365,17 @@ const FlashcardPage = () => {
                                 ))}
                             </div>
                             {showAnswer && (
-                                <div className={`text-center p-4 rounded-lg mt-4 ${
+                                <div className={`text-center p-4 rounded-xl mt-4 transition-all duration-300 ${
                                     selectedOption === flashcard.correctOption 
-                                        ? 'bg-green-100 text-green-700' 
-                                        : 'bg-red-100 text-red-700'
+                                        ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-700' 
+                                        : 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-700'
                                 }`}>
-                                    {selectedOption === flashcard.correctOption 
-                                        ? '✅ Correct!' 
-                                        : `❌ Incorrect. The correct answer is: ${flashcard.correctOption}`
-                                    }
+                                    <p className="font-medium">
+                                        {selectedOption === flashcard.correctOption 
+                                            ? '✨ Great job! That\'s correct!' 
+                                            : `The correct answer is: "${flashcard.correctOption}"`
+                                        }
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -322,36 +383,26 @@ const FlashcardPage = () => {
                 }
                 return null;
 
-            case 'audio':
-                return (
-                    <div className="flex flex-col items-center gap-2">
-                        <p className="title">{content}</p>
-                        <audio 
-                            controls 
-                            src={flashcard.audioUrl}
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                    </div>
-                );
-
             default:
                 return (
-                    <div className="flex flex-col items-center gap-2">
-                        <p className="title">{content}</p>
+                    <div className="flex flex-col items-center gap-4 p-6">
+                        <p className="text-2xl sm:text-4xl font-semibold text-gray-800 text-center">
+                            {content}
+                        </p>
                         {side === 'front' && (
-                            <div className="flex items-center justify-center gap-2 mt-2">
+                            <div className="flex items-center justify-center gap-3 mt-2">
                                 <button 
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         speakText(content);
                                     }}
-                                    className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${speaking ? 'text-blue-500' : ''}`}
+                                    className={`p-3 rounded-full hover:bg-indigo-100 transition-all duration-300 
+                                        ${speaking ? 'text-indigo-600 bg-indigo-50' : 'text-gray-600'}`}
                                     disabled={speaking}
-                                    aria-label="Listen to pronunciation"
                                 >
-                                    <IoVolumeHighOutline size={24} />
+                                    <IoVolumeHighOutline size={28} />
                                 </button>
-                                <span className="text-gray-500">
+                                <span className="text-base sm:text-xl text-gray-500 bg-gray-50 px-4 py-2 rounded-full">
                                     {phonetic || content}
                                 </span>
                             </div>
@@ -379,107 +430,146 @@ const FlashcardPage = () => {
         setShowImageAnswer(false);
     };
 
-    return(
-        <div className='flex flex-col items-center pt-10 px-4 md:px-20 h-screen'>
-            {/* @ts-ignore */}
-            <h1 className='text-2xl font-bold'>Lesson {lessons[0]?.title}</h1>
-            <div className='flex flex-col md:flex-row items-center justify-end w-full gap-4 mt-4'>
-                <Link href={`/flashcards/exam/${id}`} className='w-full md:w-auto'>
-                    <button className='w-full bg-green-500 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2'>
-                        <IoSchoolOutline />
-                        Exam lesson
-                    </button>
-                </Link>
+    return (
+        <>
+            <Header />
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 pt-16">
+                <div className="container mx-auto px-4 py-4 sm:py-8 relative">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+                    <div className="absolute top-20 right-10 w-32 h-32 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+                    <div className="absolute -bottom-8 left-20 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
 
-                {isOwner && (
-                    <>
-                        <Link href={`/flashcards/edit/${id}`} className='w-full md:w-auto'>
-                            <button className='w-full bg-yellow-500 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2'>
-                                <IoPencilOutline />
-                                Edit lesson
-                            </button>
-                        </Link>
-                        <button 
-                            onClick={() => setIsModalOpen(true)}
-                            disabled={isDeleting}
-                            className='w-full md:w-auto bg-red-500 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2 disabled:opacity-50'
-                        >
-                            <IoTrashOutline />
-                            {isDeleting ? 'Deleting...' : 'Delete lesson'}
-                        </button>
-                    </>
-                )}
+                    {/* Title Section */}
+                    <div className="text-center mb-8 relative">
+                        <h1 className="text-3xl sm:text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-600">
+                            {lessons[0]?.title || 'Flashcard Set'}
+                        </h1>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex flex-wrap justify-center gap-3">
+                            <Link 
+                                href={`/flashcards/exam/${id}`}
+                                className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 
+                                    text-white rounded-full hover:from-green-600 hover:to-emerald-700 transition-all duration-300 
+                                    font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                            >
+                                <IoSchoolOutline size={20} />
+                                Take Exam
+                            </Link>
 
-                <Link href={`/`} className='w-full md:w-auto'>
-                    <button className='w-full bg-blue-500 text-white px-4 py-2 rounded-md flex items-center justify-center gap-2'>
-                        <IoHomeOutline />
-                        Home
-                    </button>
-                </Link>
-            </div>
-            {flashcards.length > 0 ? (
-                <div className='flex flex-col items-center justify-center w-full pt-10 md:pt-32'>
-                    <div className='flex items-center justify-center w-full max-w-4xl px-4'>
-                        <button 
-                            onClick={prevCard}
-                            className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                            aria-label="Previous card"
-                        >
-                            <IoChevronBackOutline size={28} />
-                        </button>
+                            {isOwner && (
+                                <>
+                                    <Link 
+                                        href={`/flashcards/edit/${id}`}
+                                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 
+                                            text-white rounded-full hover:from-amber-600 hover:to-yellow-700 transition-all duration-300 
+                                            font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                    >
+                                        <IoPencilOutline size={20} />
+                                        Edit Set
+                                    </Link>
+                                    <button 
+                                        onClick={() => setIsModalOpen(true)}
+                                        disabled={isDeleting}
+                                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 
+                                            text-white rounded-full hover:from-red-600 hover:to-rose-700 transition-all duration-300 
+                                            font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50"
+                                    >
+                                        <IoTrashOutline size={20} />
+                                        {isDeleting ? 'Deleting...' : 'Delete Set'}
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
 
-                        <div className='flex-1 flex justify-center mx-8'>
-                            {flashcards[currentCard].type === 'multipleChoice' ? (
-                                <div className="w-full max-w-xl px-4">
-                                    {renderFlashcardContent(flashcards[currentCard], 'front')}
-                                </div>
-                            ) : flashcards[currentCard].type === 'image' ? (
-                                <div className="w-full max-w-xl px-4">
-                                    {renderFlashcardContent(flashcards[currentCard], 'front')}
-                                </div>
-                            ) : (
-                                <div 
-                                    className={`flip-card ${isFlipped ? 'flipped' : ''}`} 
-                                    onClick={() => setIsFlipped(!isFlipped)}
+                    {/* Flashcard Content */}
+                    {flashcards.length > 0 ? (
+                        <div className="flex flex-col items-center justify-center w-full max-w-4xl mx-auto mt-8">
+                            <div className="flex items-center justify-center w-full gap-4">
+                                {/* Arrow buttons - visible only on desktop */}
+                                <button 
+                                    onClick={prevCard}
+                                    className="hidden sm:flex w-12 h-12 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm
+                                        shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white transform hover:-translate-x-1"
                                 >
-                                    <div className="flip-card-inner">
-                                        <div className="flip-card-front">
-                                            {renderFlashcardContent(flashcards[currentCard], 'front')}
-                                        </div>
-                                        <div className="flip-card-back">
-                                            {renderFlashcardContent(flashcards[currentCard], 'back')}
+                                    <IoChevronBackOutline size={24} className="text-gray-600" />
+                                </button>
+
+                                {/* Flashcard Container with swipe handlers */}
+                                <div 
+                                    {...handlers}
+                                    className="w-full max-w-[320px] sm:max-w-2xl touch-pan-y"
+                                >
+                                    <div 
+                                        className={`flip-card ${isFlipped ? 'flipped' : ''}`} 
+                                        onClick={() => setIsFlipped(!isFlipped)}
+                                    >
+                                        <div className="flip-card-inner">
+                                            <div className="flip-card-front">
+                                                {renderFlashcardContent(flashcards[currentCard], 'front')}
+                                            </div>
+                                            <div className="flip-card-back">
+                                                {renderFlashcardContent(flashcards[currentCard], 'back')}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            )}
-                        </div>
 
-                        <button 
-                            onClick={nextCard}
-                            className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                            aria-label="Next card"
-                        >
-                            <IoChevronForwardOutline size={28} />
-                        </button>
-                    </div>
-                    
-                    {/* Card counter */}
-                    <div className="mt-6 text-gray-500">
-                        {currentCard + 1} / {flashcards.length}
-                    </div>
+                                {/* Arrow button - visible only on desktop */}
+                                <button 
+                                    onClick={nextCard}
+                                    className="hidden sm:flex w-12 h-12 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm
+                                        shadow-lg hover:shadow-xl transition-all duration-300 hover:bg-white transform hover:translate-x-1"
+                                >
+                                    <IoChevronForwardOutline size={24} className="text-gray-600" />
+                                </button>
+                            </div>
+
+                            {/* Single Dot Navigation - mobile only */}
+                            <div className="sm:hidden mt-6">
+                                <div className="w-2 h-2 rounded-full bg-indigo-600"></div>
+                            </div>
+
+                            {/* Swipe Hint - mobile only */}
+                            <div className="text-gray-500 text-sm text-center mt-4 sm:hidden">
+                                Swipe left or right to navigate
+                            </div>
+
+                            {/* Card Counter */}
+                            <div className="mt-6 text-center">
+                                <span className="inline-flex items-center px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm border border-gray-100">
+                                    <span className="text-sm text-gray-500">Card</span>
+                                    <span className="text-lg font-semibold text-indigo-600 mx-2">{currentCard + 1}</span>
+                                    <span className="text-sm text-gray-500">of {flashcards.length}</span>
+                                </span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 text-center border border-white/50 max-w-md mx-auto">
+                            <p className="text-gray-600 mb-4">No flashcards available for this set.</p>
+                            <Link 
+                                href="/"
+                                className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium"
+                            >
+                                <IoHomeOutline size={18} />
+                                Return Home
+                            </Link>
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <div className="pt-20 md:pt-40">No flashcards available for this lesson.</div>
-            )}
+            </div>
+
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleDelete}
-                title="Delete Lesson"
-                message='Are you sure you want to delete this lesson?'
+                title="Delete Flashcard Set"
+                message="Are you sure you want to delete this flashcard set? This action cannot be undone."
             />
-        </div>
-    )
+        </>
+    );
 };
 
 export default FlashcardPage;
