@@ -442,12 +442,15 @@ const FlashcardPage = () => {
 
                     {/* Title Section */}
                     <div className="text-center mb-8 relative">
-                        <h1 className="text-3xl sm:text-4xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-600">
-                            {lessons[0]?.title || 'Flashcard Set'}
-                        </h1>
+                        <div className="relative inline-block">
+                            <h1 className="text-3xl sm:text-4xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-500">
+                                {lessons[0]?.title || 'Flashcard Set'}
+                            </h1>
+                            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-600 to-pink-500 rounded-full"></div>
+                        </div>
                         
                         {/* Action Buttons */}
-                        <div className="flex flex-wrap justify-center gap-3">
+                        <div className="flex flex-wrap justify-center gap-3 mt-6">
                             <Link 
                                 href={`/flashcards/exam/${id}`}
                                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 

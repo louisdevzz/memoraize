@@ -3,6 +3,8 @@ import { Roboto } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import StyledComponentsRegistry from '../lib/registry'
+import { Suspense } from "react";
+import Loader from "@/components/Loader";
 
 const roboto = Roboto({
   weight: ["400", "700"],
@@ -21,10 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${roboto.className} antialiased`}
-      >
-        <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+      <body className={`${roboto.className} antialiased`}>
+        <Suspense fallback={<Loader />}>
+          <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+        </Suspense>
         <Analytics />
       </body>
     </html>

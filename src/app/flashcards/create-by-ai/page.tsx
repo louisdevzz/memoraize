@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MdArrowBack, MdAutorenew } from "react-icons/md";
+import Header from "@/components/Header";
 
 const CreateByAI = () => {
     const router = useRouter();
@@ -80,85 +81,118 @@ const CreateByAI = () => {
     };
 
     return (
-        <div className="flex flex-col items-center pt-10 px-20 h-screen">
-            <div className="flex flex-row-reverse gap-10 justify-center items-center w-full max-w-2xl">
-                <h1 className="text-4xl font-bold">Create by AI</h1>
-                <Link 
-                    href="/" 
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-                >
-                    <MdArrowBack size={20} />
-                    Return Home
-                </Link>
+        <>
+            <Header />
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 pt-16">
+                <div className="container mx-auto px-4 py-4 sm:py-8 relative">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-20 left-10 w-32 h-32 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+                    <div className="absolute top-20 right-10 w-32 h-32 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
+                    <div className="absolute -bottom-8 left-20 w-32 h-32 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+
+                    {/* Title Section */}
+                    <div className="text-center mb-8 relative">
+                        {/* Small decorative circles */}
+                        <div className="absolute -top-6 -left-6 w-12 h-12 sm:w-20 sm:h-20 bg-yellow-200 rounded-full opacity-50 floating"></div>
+                        <div className="absolute top-0 right-0 w-10 h-10 sm:w-16 sm:h-16 bg-pink-200 rounded-full opacity-50 floating animation-delay-1000"></div>
+                        
+                        <div className="relative inline-block">
+                            <h1 className="text-2xl sm:text-3xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-500">
+                                Create Flashcards with AI
+                            </h1>
+                            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-600 to-pink-500 rounded-full"></div>
+                        </div>
+                        <p className="text-gray-600 text-sm sm:text-base max-w-2xl mx-auto mt-4">
+                            Let AI help you generate flashcards based on your topic and requirements
+                        </p>
+                    </div>
+
+                    {/* Main Form */}
+                    <div className="max-w-2xl mx-auto">
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl p-6 sm:p-8 border border-white/50">
+                                <div className="space-y-6">
+                                    <div>
+                                        <label className="block mb-2 text-gray-700 font-medium">
+                                            Category <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="category"
+                                            value={formData.category}
+                                            onChange={handleInputChange}
+                                            className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition bg-white/50"
+                                            placeholder="e.g., Learning English, Learning Spanish, Learning French"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block mb-2 text-gray-700 font-medium">
+                                            Topic <span className="text-red-500">*</span>
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="topic"
+                                            value={formData.topic}
+                                            onChange={handleInputChange}
+                                            className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition bg-white/50"
+                                            placeholder="e.g., English Vocabulary, Spanish Vocabulary, French Vocabulary"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block mb-2 text-gray-700 font-medium">
+                                            Custom Prompt (Optional)
+                                        </label>
+                                        <textarea
+                                            name="prompt"
+                                            value={formData.prompt}
+                                            onChange={handleInputChange}
+                                            rows={4}
+                                            className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition bg-white/50"
+                                            placeholder="e.g., Create 5 flashcards about English Vocabulary focusing on Animals"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex justify-end gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => router.push('/')}
+                                    className="px-6 py-3 text-indigo-600 hover:text-indigo-700 font-medium rounded-xl 
+                                        hover:bg-indigo-50 transition-all duration-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl 
+                                        hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 font-medium 
+                                        shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <MdAutorenew size={20} />
+                                            Generate Flashcards
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-
-            <form onSubmit={handleSubmit} className="w-full max-w-2xl mt-10 space-y-6">
-                <div className="space-y-2">
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                        Category
-                    </label>
-                    <input
-                        type="text"
-                        id="category"
-                        name="category"
-                        value={formData.category}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        placeholder="Enter category (e.g., Learning English, Learning Spanish, Learning French)"
-                        required
-                    />
-                </div>
-
-                <div className="space-y-2">
-                    <label htmlFor="topic" className="block text-sm font-medium text-gray-700">
-                        Topic
-                    </label>
-                    <input
-                        type="text"
-                        id="topic"
-                        name="topic"
-                        value={formData.topic}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        placeholder="Enter topic (e.g., English Vocabulary, Spanish Vocabulary, French Vocabulary)"
-                        required
-                    />
-                </div>
-
-                <div className="space-y-2">
-                    <label htmlFor="prompt" className="block text-sm font-medium text-gray-700">
-                        Custom Prompt (Optional)
-                    </label>
-                    <textarea
-                        id="prompt"
-                        name="prompt"
-                        value={formData.prompt}
-                        onChange={handleInputChange}
-                        rows={4}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        placeholder="Enter custom prompt (e.g., Create 5 flashcards about English Vocabulary about the topic of Animals)"
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 disabled:bg-blue-300 disabled:cursor-not-allowed"
-                >
-                    {isLoading ? (
-                        <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Generating...
-                        </>
-                    ) : (
-                        <>
-                            <MdAutorenew size={20} />
-                            Generate Flashcards
-                        </>
-                    )}
-                </button>
-            </form>
-        </div>
+        </>
     );
 };
 

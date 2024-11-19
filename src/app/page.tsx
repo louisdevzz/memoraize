@@ -11,44 +11,44 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchLessons = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
+  // const fetchLessons = useCallback(async () => {
+  //   try {
+  //     const token = localStorage.getItem('token');
 
-      setLoading(true);
-      if (!token) {
-        router.push('/login');
-        return;
-      }
+  //     setLoading(true);
+  //     if (!token) {
+  //       router.push('/login');
+  //       return;
+  //     }
 
-      const response = await fetch('/api/flashcards/byUser', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+  //     const response = await fetch('/api/flashcards/byUser', {
+  //       headers: { 'Authorization': `Bearer ${token}` }
+  //     });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
 
-      const data = await response.json();
-      setLessons(data);
-    } catch (error) {
-      console.error('Error fetching lessons:', error);
-      // Optionally show an error message to the user
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
+  //     const data = await response.json();
+  //     setLessons(data);
+  //   } catch (error) {
+  //     console.error('Error fetching lessons:', error);
+  //     // Optionally show an error message to the user
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [router]);
 
-  useEffect(() => {
-    fetchLessons();
-  }, [fetchLessons]);
+  // useEffect(() => {
+  //   fetchLessons();
+  // }, [fetchLessons]);
 
   //console.log(lessons);
-  if(loading){
-    return <div className="min-h-screen flex justify-center items-center">
-      <div className='loader'></div>
-    </div>;
-  }
+  // if(loading){
+  //   return <div className="min-h-screen flex justify-center items-center">
+  //     <div className='loader'></div>
+  //   </div>;
+  // }
 
   const getRandomColor = () => {
     const colors = [

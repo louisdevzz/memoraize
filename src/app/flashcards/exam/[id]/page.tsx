@@ -6,10 +6,12 @@ import { useEffect } from 'react';
 import { IoArrowBack, IoVolumeHighOutline } from "react-icons/io5";
 import Image from 'next/image';
 import { Flashcard } from '@/models/Lesson';
+import Header from '@/components/Header';
 
 interface Lesson {
     slug: string;
     flashcards: Flashcard[];
+    title: string;
 }
 
 const ExamPage = () => {
@@ -104,14 +106,14 @@ const ExamPage = () => {
                                 </div>
                             )}
                         </div>
-                        <h2 className="text-xl font-semibold text-center">{currentCard.front}</h2>
+                        <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-800">{currentCard.front}</h2>
                     </div>
                 );
 
             case 'multipleChoice':
                 return (
                     <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-center">{currentCard.front}</h2>
+                        <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-800 mb-6">{currentCard.front}</h2>
                         <div className="grid gap-3">
                             {currentCard.options.map((option, index) => (
                                 <button
@@ -121,7 +123,7 @@ const ExamPage = () => {
                                         handleSubmit(new Event('submit') as any);
                                     }}
                                     disabled={result !== null}
-                                    className={`p-4 rounded-lg text-left transition-all hover:bg-blue-50 
+                                    className={`p-4 rounded-xl text-left transition-all text-base sm:text-lg font-medium hover:bg-blue-50 
                                         ${result !== null 
                                             ? option === currentCard.back 
                                                 ? 'bg-green-100 border-2 border-green-500'
@@ -137,25 +139,11 @@ const ExamPage = () => {
                     </div>
                 );
 
-            case 'audio':
-                return (
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-center">{currentCard.front}</h2>
-                        <div className="flex justify-center">
-                            <audio 
-                                controls 
-                                src={currentCard.audioUrl}
-                                className="w-full max-w-md"
-                            />
-                        </div>
-                    </div>
-                );
-
             default:
                 return (
                     <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-center">{currentCard.front}</h2>
-                        <div className="flex items-center justify-center gap-2">
+                        <h2 className="text-xl sm:text-2xl font-semibold text-center text-gray-800">{currentCard.front}</h2>
+                        <div className="flex items-center justify-center gap-3">
                             <button
                                 onClick={() => speakText(currentCard.front)}
                                 className={`p-2 rounded-full hover:bg-gray-100 transition-colors ${speaking ? 'text-blue-500' : ''}`}
@@ -217,115 +205,175 @@ const ExamPage = () => {
     };
 
     return (
-        <div className='flex flex-col justify-center items-center w-full mx-auto p-4 pt-10'>
-            <div className="w-full max-w-md mb-4">
-                <button
-                    onClick={() => router.push(`/flashcards/${id}`)}
-                    className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition-colors"
-                >
-                    <IoArrowBack className="h-5 w-5" />
-                    <span>Back to Flashcards</span>
-                </button>
-            </div>
+        <>
+            <Header />
+            <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-pink-50 pt-16">
+                <div className="container mx-auto px-4 py-4 sm:py-8 relative">
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-0 left-0 w-32 h-32 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating"></div>
+                    <div className="absolute bottom-0 right-0 w-32 h-32 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating animation-delay-2000"></div>
+                    <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating animation-delay-4000"></div>
+                    <div className="absolute bottom-1/4 right-1/4 w-28 h-28 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-20 floating animation-delay-3000"></div>
 
-            <h1 className='text-4xl font-bold mb-6'>Exam lesson {id}</h1>
-            
-            {currentCard ? (
-                <div className='w-full max-w-md'>
-                    <div className='bg-white rounded-lg shadow-md p-6 mb-4'>
-                        {renderQuestion()}
+                    {/* Title Section */}
+                    <div className="text-center mb-8 relative">
+                        {/* Small decorative circles */}
+                        <div className="absolute -top-6 -left-6 w-12 h-12 sm:w-20 sm:h-20 bg-yellow-200 rounded-full opacity-50 floating"></div>
+                        <div className="absolute top-0 right-0 w-10 h-10 sm:w-16 sm:h-16 bg-pink-200 rounded-full opacity-50 floating animation-delay-1000"></div>
                         
-                        {currentCard.type !== 'multipleChoice' && (
-                            <form onSubmit={handleSubmit} className='space-y-4 mt-6'>
-                                <input
-                                    type="text"
-                                    value={userAnswer}
-                                    onChange={(e) => setUserAnswer(e.target.value)}
-                                    className='w-full p-2 border rounded'
-                                    placeholder='Your answer...'
-                                    disabled={result !== null}
-                                />
-                                <button 
-                                    type="submit"
-                                    className='w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600'
-                                    disabled={result !== null}
-                                >
-                                    Submit
-                                </button>
-                            </form>
-                        )}
-
-                        {result !== null && (
-                            <div className={`mt-4 p-2 rounded text-center ${result ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                {result ? 'Correct!' : `Incorrect. The correct answer was: ${currentCard.back}`}
-                            </div>
-                        )}
-
-                        <div className='mt-4 text-sm text-gray-500'>
-                            Remaining cards: {remainingCards.length}
+                        <div className="relative inline-block">
+                            <h1 className="text-2xl sm:text-3xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-500">
+                                Exam Mode
+                            </h1>
+                            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-600 to-pink-500 rounded-full"></div>
                         </div>
                     </div>
-                </div>
-            ) : (
-                <div className='w-full max-w-md'>
-                    {remainingCards.length === 0 && lessons.length > 0 ? (
-                        <div className='bg-white rounded-lg shadow-md p-6'>
-                            <h2 className='text-2xl font-bold mb-4'>Exam Results</h2>
-                            
-                            <div className='space-y-4'>
-                                <div className='flex justify-between items-center'>
-                                    <span>Total Cards:</span>
-                                    <span className='font-semibold'>
-                                        {examStats.correctAnswers + examStats.incorrectAnswers}
-                                    </span>
-                                </div>
-                                
-                                <div className='flex justify-between items-center text-green-600'>
-                                    <span>Correct Answers:</span>
-                                    <span className='font-semibold'>{examStats.correctAnswers}</span>
-                                </div>
-                                
-                                <div className='flex justify-between items-center text-red-600'>
-                                    <span>Incorrect Answers:</span>
-                                    <span className='font-semibold'>{examStats.incorrectAnswers}</span>
-                                </div>
-                                
-                                <div className='flex justify-between items-center'>
-                                    <span>Success Rate:</span>
-                                    <span className='font-semibold'>
-                                        {Math.round((examStats.correctAnswers / (examStats.correctAnswers + examStats.incorrectAnswers)) * 100)}%
-                                    </span>
-                                </div>
-                            </div>
 
-                            {examStats.incorrectCards.length > 0 && (
-                                <div className='mt-6'>
-                                    <h3 className='text-xl font-semibold mb-3'>Incorrect Answers Review:</h3>
-                                    <div className='space-y-3'>
-                                        {examStats.incorrectCards.map((card, index) => (
-                                            <div key={index} className='bg-red-50 p-3 rounded'>
-                                                <p className='font-medium'>{card.front}</p>
-                                                <p className='text-sm text-gray-600'>Your answer: {card.userAnswer}</p>
-                                                <p className='text-sm text-green-600'>Correct answer: {card.back}</p>
-                                            </div>
-                                        ))}
+                    {currentCard ? (
+                        <div className="flex flex-col justify-center items-center">
+                            <div className="w-full max-w-xl">
+                                <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl p-6 sm:p-8 border border-white/50 relative">
+                                    {/* Card decorative circles */}
+                                    <div className="absolute -top-4 -right-4 w-8 h-8 bg-indigo-200 rounded-full opacity-30 floating"></div>
+                                    <div className="absolute -bottom-4 -left-4 w-8 h-8 bg-pink-200 rounded-full opacity-30 floating animation-delay-500"></div>
+                                    
+                                    {renderQuestion()}
+                                    
+                                    {currentCard.type !== 'multipleChoice' && (
+                                        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+                                            <input
+                                                type="text"
+                                                value={userAnswer}
+                                                onChange={(e) => setUserAnswer(e.target.value)}
+                                                className="w-full p-4 text-base sm:text-lg border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-600 transition bg-white/50"
+                                                placeholder="Your answer..."
+                                                disabled={result !== null}
+                                            />
+                                            <button 
+                                                type="submit"
+                                                className="w-full bg-indigo-600 text-white p-4 rounded-xl 
+                                                    hover:bg-indigo-700 transition-all duration-300 font-medium 
+                                                    shadow-lg hover:shadow-xl disabled:opacity-50 text-base"
+                                                disabled={result !== null}
+                                            >
+                                                Submit Answer
+                                            </button>
+                                        </form>
+                                    )}
+
+                                    {result !== null && (
+                                        <div className={`mt-6 p-4 rounded-xl text-center transition-all duration-300 text-base ${
+                                            result 
+                                                ? 'bg-gradient-to-r from-green-500/20 to-green-600/20 text-green-700' 
+                                                : 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-700'
+                                        }`}>
+                                            <p className="font-medium">
+                                                {result 
+                                                    ? '✨ Excellent! That\'s correct!' 
+                                                    : `Not quite. The correct answer is: "${currentCard.back}"`
+                                                }
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-6 text-center">
+                                        <span className="inline-flex items-center px-4 py-2 rounded-full bg-white/80 backdrop-blur-sm shadow-sm border border-gray-100">
+                                            <span className="text-sm text-gray-500">Remaining</span>
+                                            <span className="text-lg font-semibold text-indigo-600 mx-2">{remainingCards.length}</span>
+                                            <span className="text-sm text-gray-500">cards</span>
+                                        </span>
                                     </div>
                                 </div>
-                            )}
 
-                            <button
-                                onClick={() => router.push(`/flashcards/${id}`)}
-                                className='w-full mt-6 bg-blue-500 text-white p-2 rounded hover:bg-blue-600'
-                            >
-                                Back to Flashcards
-                            </button>
+                                <div className="mt-8 text-center">
+                                    <button
+                                        onClick={() => router.push(`/flashcards/${id}`)}
+                                        className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 text-sm 
+                                            text-indigo-600 hover:text-white transition-all duration-300 rounded-full
+                                            overflow-hidden hover:shadow-lg"
+                                    >
+                                        <span className="absolute inset-0 bg-gradient-to-r from-indigo-100 to-indigo-50 
+                                            group-hover:from-indigo-600 group-hover:to-indigo-500 transition-all duration-300">
+                                        </span>
+                                        <IoArrowBack className="h-5 w-5 relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
+                                        <span className="relative z-10">Back to Flashcards</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     ) : (
-                        <div className='loader'></div>
+                        <div className="flex justify-center">
+                            {remainingCards.length === 0 && lessons.length > 0 ? (
+                                <div className="w-full max-w-2xl bg-white/80 backdrop-blur-md rounded-2xl shadow-xl p-8 border border-white/50 relative">
+                                    {/* Results decorative circles */}
+                                    <div className="absolute -top-6 -left-6 w-12 h-12 bg-yellow-200 rounded-full opacity-40 floating"></div>
+                                    <div className="absolute -bottom-6 -right-6 w-12 h-12 bg-pink-200 rounded-full opacity-40 floating animation-delay-1500"></div>
+                                    
+                                    <h2 className="text-2xl font-bold mb-6 text-center bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-pink-600">
+                                        Exam Results
+                                    </h2>
+                                    
+                                    <div className="grid grid-cols-2 gap-4 mb-8">
+                                        <div className="bg-white/80 rounded-xl p-4 text-center">
+                                            <div className="text-3xl font-bold text-green-600">
+                                                {examStats.correctAnswers}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Correct</div>
+                                        </div>
+                                        <div className="bg-white/80 rounded-xl p-4 text-center">
+                                            <div className="text-3xl font-bold text-red-600">
+                                                {examStats.incorrectAnswers}
+                                            </div>
+                                            <div className="text-sm text-gray-600">Incorrect</div>
+                                        </div>
+                                        <div className="bg-white/80 rounded-xl p-4 text-center col-span-2">
+                                            <div className="text-3xl font-bold text-indigo-600">
+                                                {Math.round((examStats.correctAnswers / (examStats.correctAnswers + examStats.incorrectAnswers)) * 100)}%
+                                            </div>
+                                            <div className="text-sm text-gray-600">Success Rate</div>
+                                        </div>
+                                    </div>
+
+                                    {examStats.incorrectCards.length > 0 && (
+                                        <div className="mt-8">
+                                            <h3 className="text-xl font-semibold mb-4">Review Incorrect Answers</h3>
+                                            <div className="space-y-4">
+                                                {examStats.incorrectCards.map((card, index) => (
+                                                    <div key={index} className="bg-white/80 p-4 rounded-xl border border-red-100">
+                                                        <p className="font-medium text-gray-800">{card.front}</p>
+                                                        <div className="mt-2 text-sm space-y-1">
+                                                            <p className="text-red-600">Your answer: {card.userAnswer}</p>
+                                                            <p className="text-green-600">Correct answer: {card.back}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div className="mt-8 text-center">
+                                        <button
+                                            onClick={() => router.push(`/flashcards/${id}`)}
+                                            className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 
+                                                text-indigo-600 hover:text-white font-medium transition-all duration-300 
+                                                rounded-full overflow-hidden hover:shadow-lg w-full sm:w-auto"
+                                        >
+                                            <span className="absolute inset-0 bg-gradient-to-r from-indigo-100 to-indigo-50 
+                                                group-hover:from-indigo-600 group-hover:to-indigo-500 transition-all duration-300">
+                                            </span>
+                                            <IoArrowBack className="h-5 w-5 relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" />
+                                            <span className="relative z-10">Back to Flashcards</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="loader"></div>
+                            )}
+                        </div>
                     )}
                 </div>
-            )}
-        </div>
+            </div>
+        </>
     );
 };
 

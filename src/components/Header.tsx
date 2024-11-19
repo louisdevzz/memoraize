@@ -22,13 +22,15 @@ const Header = () => {
         
         // Check for token in localStorage
         const token = localStorage.getItem('token');
-        setIsLoggedIn(!!token);
-        try {
-            const decoded = jwt.decode(token || '');
-            //@ts-ignore
-            setUserName(decoded?.email || '');
-        } catch (error) {
-            console.error('Error decoding token:', error);
+        if (token) {
+            setIsLoggedIn(!!token);
+            try {
+                const decoded = jwt.decode(token || '');
+                //@ts-ignore
+                setUserName(decoded?.email || '');
+            } catch (error) {
+                console.error('Error decoding token:', error);
+            }
         }
 
         return () => window.removeEventListener('scroll', handleScroll);
@@ -96,37 +98,41 @@ const Header = () => {
                             </Link>
                         )}
                         <Link 
-                            href="/create/template" 
+                            href={isLoggedIn ? "/flashcards/create" : "/login"}
                             className="px-5 py-2.5 text-white bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 flex items-center gap-2"
                         >
                             <FaPlus className="w-4 h-4" />
                             Create Activity
                         </Link>
                         <Link 
-                            href="/create-by-ai" 
+                            href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
                             className="px-5 py-2.5 text-white bg-gradient-to-r from-purple-600 to-purple-500 rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-200 flex items-center gap-2"
                         >
                             <FaRobot className="w-4 h-4" />
                             Create by AI
                         </Link>
-                        <Link 
+                        {/* <Link 
                             href="/upgrade" 
                             className="px-5 py-2.5 text-indigo-600 border-2 border-indigo-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-all duration-200"
                         >
                             Upgrade
-                        </Link>
+                        </Link> */}
                         
                         {isLoggedIn ? (
                             <div className="relative">
                                 <button 
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200 group"
+                                    className="group relative flex items-center gap-3 px-4 py-2 text-gray-700  rounded-xl transition-all duration-200"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-pink-500 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
+                                    <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-indigo-600 to-pink-500 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
                                         <span className="text-white font-medium">{userName.charAt(0).toUpperCase()}</span>
                                     </div>
-                                    <span className="font-medium">{userName}</span>
+                                    <span className="font-medium relative">
+                                        {userName}
+                                        
+                                    </span>
                                     <FaChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                                    <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
                                 </button>
                                 
                                 {/* Dropdown Menu */}
@@ -168,9 +174,16 @@ const Header = () => {
                         ) : (
                             <Link 
                                 href="/login" 
-                                className="px-5 py-2.5 text-white bg-gradient-to-r from-indigo-600 to-pink-500 rounded-xl hover:shadow-lg hover:shadow-pink-500/30 transition-all duration-200"
+                                className="px-5 py-2.5 relative rounded-xl border-2 border-transparent hover:shadow-lg transition-all duration-200"
+                                style={{
+                                    backgroundImage: 'linear-gradient(white, white), linear-gradient(to right, #6366F1, #EC4899)',
+                                    backgroundOrigin: 'border-box',
+                                    backgroundClip: 'padding-box, border-box',
+                                }}
                             >
-                                Sign In
+                                <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent font-semibold">
+                                    Sign In
+                                </span>
                             </Link>
                         )}
                     </nav>
@@ -223,26 +236,35 @@ const Header = () => {
                                     {/* Action Buttons */}
                                     <div className="pt-4 space-y-3">
                                         <Link 
-                                            href="/create/template" 
+                                            href={isLoggedIn ? "/flashcards/create" : "/login"}
                                             className="block w-full py-3 text-white bg-[#6366F1] rounded-lg text-center"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
                                             Create Activity
                                         </Link>
                                         <Link 
-                                            href="/create-by-ai" 
+                                            href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
                                             className="block w-full py-3 text-white bg-[#9333EA] rounded-lg text-center"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
                                             Create by AI
                                         </Link>
-                                        <Link 
-                                            href="/upgrade" 
-                                            className="block w-full py-3 text-[#6366F1] border border-[#6366F1] rounded-lg text-center"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            Upgrade
-                                        </Link>
+                                        {!isLoggedIn && (
+                                            <Link 
+                                                href="/login"
+                                                className="block w-full py-3 relative rounded-lg text-center border-2 border-transparent"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                                style={{
+                                                    backgroundImage: 'linear-gradient(white, white), linear-gradient(to right, #6366F1, #EC4899)',
+                                                    backgroundOrigin: 'border-box',
+                                                    backgroundClip: 'padding-box, border-box',
+                                                }}
+                                            >
+                                                <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent font-semibold">
+                                                    Sign In
+                                                </span>
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
 
