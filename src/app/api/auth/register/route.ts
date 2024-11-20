@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import User, { IUser } from '@/models/User';
-
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || ''; // In production, use environment variable
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +13,7 @@ export async function POST(req: Request) {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User already exists' },
+        { message: 'User already exists' },
         { status: 400 }
       );
     }
@@ -29,29 +26,43 @@ export async function POST(req: Request) {
       name,
       email,
       password: hashedPassword
-    });
+    }) as IUser;
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Create session data
+    const sessionData = {
+      userId: user._id.toHexString(),
+      email: user.email,
+      name: user.name
+    };
 
-    return NextResponse.json({
-      message: 'Register successful',
-      token,
+    // Set cookie options
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge: 7 * 24 * 60 * 60, // 7 days in seconds
+      path: '/'
+    };
+
+    // Create the response
+    const response = NextResponse.json({
+      message: 'Registration successful',
       user: {
-        id: user._id,
-        name: user.name,
+        id: user._id.toHexString(),
         email: user.email,
+        name: user.name
       }
     });
+
+    // Set the cookie in the response
+    response.cookies.set('session', JSON.stringify(sessionData), cookieOptions);
+
+    return response;
     
   } catch (error) {
     console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { message: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -34,7 +34,7 @@ export default function Landing() {
                   Get Started Free
                 </Link>
                 <Link href="/explore" className="px-6 py-3 lg:px-8 lg:py-4 border-2 border-indigo-600 text-indigo-600 rounded-xl hover:bg-indigo-50 transition w-full sm:w-auto">
-                  Explore Games
+                  Explore Lessons
                 </Link>
               </div>
               

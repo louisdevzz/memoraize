@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'react-hot-toast'
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -26,13 +27,17 @@ export default function RegisterPage() {
         body: JSON.stringify(formData)
       })
 
+      const data = await response.json()
+
       if (response.ok) {
-        router.push('/login')
+        toast.success('Registration successful!')
+        router.push('/')
       } else {
-        throw new Error('Registration failed')
+        toast.error(data.message || 'Registration failed')
       }
     } catch (error) {
       console.error('Registration error:', error)
+      toast.error('An unexpected error occurred')
     } finally {
       setLoading(false)
     }
@@ -108,29 +113,6 @@ export default function RegisterPage() {
               Login
             </Link>
           </p>
-
-          {/* <div className="pt-2">
-            <Link 
-              href="/" 
-              className="group flex items-center justify-center gap-2 text-gray-500 hover:text-indigo-600 text-sm transition-all duration-300 border border-gray-200 hover:border-indigo-600/30 rounded-xl p-3 hover:bg-indigo-50/50"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="18" 
-                height="18" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-                className="transform transition-transform duration-300 group-hover:-translate-x-1"
-              >
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              Back to Home
-            </Link>
-          </div> */}
         </div>
         
         {/* Decorative elements */}
@@ -138,5 +120,5 @@ export default function RegisterPage() {
         <div className="absolute -bottom-6 -right-6 w-10 h-10 sm:w-16 sm:h-16 bg-pink-200 rounded-full opacity-50 floating"></div>
       </div>
     </div>
-  );
+  )
 }

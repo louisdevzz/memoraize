@@ -19,7 +19,7 @@ interface Lesson {
 
 const FlashcardPage = () => {
     const params = useParams();
-    const id = params.id;
+    const slug = params.slug;
     const router = useRouter();
     const [currentCard, setCurrentCard] = useState(0);
     const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -39,21 +39,17 @@ const FlashcardPage = () => {
 
     const fetchLessons = useCallback(async () => {
         try {
-            const token = localStorage.getItem('token');
             setIsLoading(true);
             setError(null);
 
-            if (!token) {
-                router.push('/login');
-                return;
-            }
-
-            // First, fetch the lesson details
-            const response = await fetch(`/api/flashcards/${id}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            // Fetch the lesson details
+            const response = await fetch(`/api/flashcards/bySlug?slug=${slug}`);
         
             if (!response.ok) {
+                if (response.status === 401) {
+                    router.push('/login');
+                    return;
+                }
                 throw new Error('Failed to fetch lesson');
             }
 
@@ -65,16 +61,8 @@ const FlashcardPage = () => {
             }
             
             setLessons([data]);
-
-            // Check if the current user is the owner
-            const userResponse = await fetch('/api/auth/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-
-            if (userResponse.ok) {
-                const userData = await userResponse.json();
-                setIsOwner(userData.id === data.userId);
-            }
+            // The isOwner flag is now included in the response
+            setIsOwner(data.isOwner);
 
         } catch (error) {
             console.error('Error fetching lessons:', error);
@@ -82,7 +70,7 @@ const FlashcardPage = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [router, id]);
+    }, [router, slug]);
     
     useEffect(() => {
         fetchLessons();
@@ -139,24 +127,28 @@ const FlashcardPage = () => {
     const handleDelete = async () => {
         try {
             setIsDeleting(true);
-            const token = localStorage.getItem('token');
-            const response = await fetch(`/api/flashcards/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
+            const response = await fetch(`/api/flashcards/bySlug?slug=${slug}`, {
+                method: 'DELETE'
             });
-
-            if (response.ok) {
-                router.push('/');
-            } else {
-                throw new Error('Failed to delete lesson');
+    
+            if (!response.ok) {
+                const data = await response.json();
+                if (response.status === 401) {
+                    router.push('/login');
+                    return;
+                }
+                throw new Error(data.error || 'Failed to delete lesson');
             }
+    
+            router.push('/');
         } catch (error) {
             console.error('Error deleting lesson:', error);
-            alert('Failed to delete lesson');
+            setError('Failed to delete lesson');
         } finally {
             setIsDeleting(false);
+            setIsModalOpen(false);
         }
-    };
+    }; 
 
     useEffect(() => {
         const handleKeyPress = (e: KeyboardEvent) => {
@@ -188,7 +180,7 @@ const FlashcardPage = () => {
         return () => {
             window.speechSynthesis.cancel(); // Cancel any ongoing speech
         };
-    }, [id]); // Only run when id changes or component mounts/unmounts
+    }, [slug]); // Only run when id changes or component mounts/unmounts
 
     // Updated wa handlers with correct property names
     const handlers = useSwipeable({
@@ -452,7 +444,7 @@ const FlashcardPage = () => {
                         {/* Action Buttons */}
                         <div className="flex flex-wrap justify-center gap-3 mt-6">
                             <Link 
-                                href={`/flashcards/exam/${id}`}
+                                href={`/flashcards/exam/${slug}`}
                                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 
                                     text-white rounded-full hover:from-green-600 hover:to-emerald-700 transition-all duration-300 
                                     font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
@@ -464,7 +456,7 @@ const FlashcardPage = () => {
                             {isOwner && (
                                 <>
                                     <Link 
-                                        href={`/flashcards/edit/${id}`}
+                                        href={`/flashcards/edit/${slug}`}
                                         className="inline-flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-600 
                                             text-white rounded-full hover:from-amber-600 hover:to-yellow-700 transition-all duration-300 
                                             font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"

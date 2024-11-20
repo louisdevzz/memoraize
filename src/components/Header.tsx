@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
-import { FaSchool, FaUser, FaEdit, FaSignOutAlt, FaChevronDown, FaSearch, FaChartBar, FaPlus, FaRobot } from 'react-icons/fa';
+import { FaSchool, FaUser, FaEdit, FaSignOutAlt, FaChevronDown, FaSearch, FaChartBar, FaPlus, FaRobot, FaList } from 'react-icons/fa';
 import Link from 'next/link';
-import jwt from 'jsonwebtoken';
 import { useRouter } from 'next/navigation';
 
 const Header = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-    const [userName, setUserName] = useState<string>('');
+    const [userData, setUserData] = useState<{ email: string; name: string } | null>(null);
     const [isScrolled, setIsScrolled] = useState(false);
 
     const router = useRouter();
@@ -20,21 +19,59 @@ const Header = () => {
 
         window.addEventListener('scroll', handleScroll);
         
-        // Check for token in localStorage
-        const token = localStorage.getItem('token');
-        if (token) {
-            setIsLoggedIn(!!token);
+        // Check for session cookie and get user data
+        const checkAuth = async () => {
             try {
-                const decoded = jwt.decode(token || '');
-                //@ts-ignore
-                setUserName(decoded?.email || '');
+                console.log('Checking auth...');
+                const response = await fetch('/api/auth/user');
+                // console.log('Auth response status:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // console.log('Auth data:', data);
+                    setUserData(data);
+                    setIsLoggedIn(true);
+                } else {
+                    // console.log('Auth failed:', await response.text());
+                    setIsLoggedIn(false);
+                    setUserData(null);
+                }
             } catch (error) {
-                console.error('Error decoding token:', error);
+                console.error('Error checking auth:', error);
+                setIsLoggedIn(false);
+                setUserData(null);
             }
-        }
+        };
 
-        return () => window.removeEventListener('scroll', handleScroll);
+        checkAuth();
+        
+        // Reduce the check frequency to avoid too many requests
+        const authInterval = setInterval(checkAuth, 10000); // Check every 10 seconds
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearInterval(authInterval);
+        };
     }, []);
+
+    const handleLogout = async () => {
+        try {
+            console.log('Logging out...');
+            const response = await fetch('/api/auth/logout', {
+                method: 'POST',
+            });
+
+            // console.log('Logout response status:', response.status);
+
+            if (response.ok) {
+                setIsLoggedIn(false);
+                setUserData(null);
+                router.push('/');
+            } 
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
     const handleOverlayClick = (e: React.MouseEvent) => {
         if (isDropdownOpen) {
@@ -56,7 +93,7 @@ const Header = () => {
     }, [isMobileMenuOpen]);
 
     return (
-        <header className={`fixed w-full top-0 z-50 transition-all duration-300 ${
+        <header className={`fixed w-full top-0 z-30 transition-all duration-300 ${
             isScrolled ? 'bg-white/80 backdrop-blur-md shadow-lg' : 'bg-transparent'
         }`}>
             <div className="container mx-auto sm:px-6 px-2">
@@ -72,7 +109,7 @@ const Header = () => {
                     </Link>
 
                     {/* Mobile Menu Button */}
-                    <button 
+                    {/* <button 
                         className="md:hidden relative z-50 w-10 h-10 focus:outline-none group"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
@@ -81,7 +118,7 @@ const Header = () => {
                             <span className={`w-full h-0.5 bg-gray-600 mt-1.5 transform transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></span>
                             <span className={`w-full h-0.5 bg-gray-600 mt-1.5 transform transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
                         </div>
-                    </button>
+                    </button> */}
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-3">
@@ -90,12 +127,19 @@ const Header = () => {
                             Explore
                             <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
                         </Link>
-                        {isLoggedIn && (
-                            <Link href="/results" className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2">
-                                <FaChartBar className="w-4 h-4" />
-                                My Results
-                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                            </Link>
+                        {isLoggedIn&&(
+                            <>
+                                <Link href="/results" className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2">
+                                    <FaChartBar className="w-4 h-4" />
+                                    My Results
+                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                </Link>
+                                <Link href="/activities" className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2">
+                                    <FaList className="w-4 h-4" />
+                                    My Activities
+                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                </Link>
+                            </>
                         )}
                         <Link 
                             href={isLoggedIn ? "/flashcards/create" : "/login"}
@@ -111,25 +155,37 @@ const Header = () => {
                             <FaRobot className="w-4 h-4" />
                             Create by AI
                         </Link>
-                        {/* <Link 
-                            href="/upgrade" 
-                            className="px-5 py-2.5 text-indigo-600 border-2 border-indigo-200 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/50 transition-all duration-200"
-                        >
-                            Upgrade
-                        </Link> */}
-                        
-                        {isLoggedIn ? (
+
+                        {!isLoggedIn &&(
+                            <Link 
+                                href="/login"
+                                className="px-5 py-2.5 relative rounded-xl border-2 border-transparent hover:shadow-lg transition-all duration-200"
+                                style={{
+                                    backgroundImage: 'linear-gradient(white, white), linear-gradient(to right, #6366F1, #EC4899)',
+                                    backgroundOrigin: 'border-box',
+                                    backgroundClip: 'padding-box, border-box',
+                                }}
+                            >
+                                <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent font-semibold">
+                                    Sign In
+                                </span>
+                            </Link>
+                        )}
+
+                        {/* User Profile Dropdown */}
+                        {isLoggedIn && userData && (
                             <div className="relative">
                                 <button 
                                     onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                                    className="group relative flex items-center gap-3 px-4 py-2 text-gray-700  rounded-xl transition-all duration-200"
+                                    className="group relative flex items-center gap-3 px-4 py-2 text-gray-700 rounded-xl transition-all duration-200"
                                 >
                                     <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-indigo-600 to-pink-500 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-200">
-                                        <span className="text-white font-medium">{userName.charAt(0).toUpperCase()}</span>
+                                        <span className="text-white font-medium">
+                                            {userData.email.charAt(0).toUpperCase()}
+                                        </span>
                                     </div>
                                     <span className="font-medium relative">
-                                        {userName}
-                                        
+                                        {userData.email}
                                     </span>
                                     <FaChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                                     <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300"></span>
@@ -158,11 +214,7 @@ const Header = () => {
                                                 </a>
                                                 <button 
                                                     className="flex items-center gap-3 px-4 py-2.5 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-200 w-full"
-                                                    onClick={() => {
-                                                        localStorage.removeItem('token');
-                                                        setIsLoggedIn(false);
-                                                        router.push('/login');
-                                                    }}
+                                                    onClick={handleLogout}
                                                 >
                                                     <FaSignOutAlt className="w-5 h-5" /> Log Out
                                                 </button>
@@ -171,42 +223,38 @@ const Header = () => {
                                     </>
                                 )}
                             </div>
-                        ) : (
-                            <Link 
-                                href="/login" 
-                                className="px-5 py-2.5 relative rounded-xl border-2 border-transparent hover:shadow-lg transition-all duration-200"
-                                style={{
-                                    backgroundImage: 'linear-gradient(white, white), linear-gradient(to right, #6366F1, #EC4899)',
-                                    backgroundOrigin: 'border-box',
-                                    backgroundClip: 'padding-box, border-box',
-                                }}
-                            >
-                                <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent font-semibold">
-                                    Sign In
-                                </span>
-                            </Link>
                         )}
                     </nav>
 
+                    {/* Mobile Menu Button */}
+                    <button 
+                        className="md:hidden fixed right-2 top-5 z-[9999] w-10 h-10 focus:outline-none group"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    >
+                        <div className="relative flex flex-col items-center justify-center w-6 h-6 mx-auto">
+                            <span className={`w-full h-0.5 bg-gray-600 transform transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
+                            <span className={`w-full h-0.5 bg-gray-600 mt-1.5 transform transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></span>
+                            <span className={`w-full h-0.5 bg-gray-600 mt-1.5 transform transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
+                        </div>
+                    </button>
+
                     {/* Mobile Menu */}
                     {isMobileMenuOpen && (
-                        <div className="fixed inset-0 z-40 md:hidden">
-                            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)}></div>
-                            <nav className="fixed right-0 top-0 bottom-0 w-[280px] bg-white flex flex-col overflow-y-auto">
+                        <div className="fixed inset-0 z-[9998] md:hidden">
+                            <div 
+                                className="fixed inset-0 bg-black/30 backdrop-blur-sm" 
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,height:'100vh' }}
+                            />
+                            <nav className="fixed right-0 top-0 h-screen w-[280px] bg-white flex flex-col overflow-y-auto">
                                 {/* Header */}
-                                <div className="sticky top-0 z-10 p-4 border-b bg-white flex items-center justify-between">
+                                <div className="p-4 border-b bg-white flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-pink-500 rounded-lg flex items-center justify-center">
                                             <span className="text-base font-bold text-white">B</span>
                                         </div>
                                         <span className="text-lg font-bold text-purple-600">BrainCards</span>
                                     </div>
-                                    {/* <button 
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                        className="w-8 h-8 flex items-center justify-center"
-                                    >
-                                        <span className="text-gray-400 text-2xl">×</span>
-                                    </button> */}
                                 </div>
 
                                 {/* Menu Content */}
@@ -218,20 +266,25 @@ const Header = () => {
                                     >
                                         Explore
                                     </Link>
-                                    <Link 
-                                        href="/activities" 
-                                        className="block text-gray-700"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        My Activities
-                                    </Link>
-                                    <Link 
-                                        href="/results" 
-                                        className="block text-gray-700"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        My Results
-                                    </Link>
+                                    
+                                    {isLoggedIn && (
+                                        <>
+                                            <Link 
+                                                href="/activities" 
+                                                className="block text-gray-700"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                My Activities
+                                            </Link>
+                                            <Link 
+                                                href="/results" 
+                                                className="block text-gray-700"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                                My Results
+                                            </Link>
+                                        </>
+                                    )}
 
                                     {/* Action Buttons */}
                                     <div className="pt-4 space-y-3">
@@ -249,7 +302,7 @@ const Header = () => {
                                         >
                                             Create by AI
                                         </Link>
-                                        {!isLoggedIn && (
+                                        {!isLoggedIn &&(
                                             <Link 
                                                 href="/login"
                                                 className="block w-full py-3 relative rounded-lg text-center border-2 border-transparent"
@@ -269,24 +322,21 @@ const Header = () => {
                                 </div>
 
                                 {/* User Section */}
-                                {isLoggedIn && (
+                                {isLoggedIn && userData && (
                                     <div className="sticky bottom-0 p-4 border-t bg-white">
                                         <div className="flex items-center gap-3 mb-4">
                                             <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-indigo-600 to-pink-500 flex items-center justify-center">
-                                                <span className="text-white font-medium">{userName.charAt(0).toUpperCase()}</span>
+                                                <span className="text-white font-medium">
+                                                    {userData.email.charAt(0).toUpperCase()}
+                                                </span>
                                             </div>
                                             <div>
-                                                <div className="text-gray-700">{userName}</div>
+                                                <div className="text-gray-700">{userData.email}</div>
                                                 <div className="text-sm text-gray-500">Basic Account</div>
                                             </div>
                                         </div>
                                         <button 
-                                            onClick={() => {
-                                                localStorage.removeItem('token');
-                                                setIsLoggedIn(false);
-                                                setIsMobileMenuOpen(false);
-                                                router.push('/login');
-                                            }}
+                                            onClick={handleLogout}
                                             className="flex items-center text-red-600 gap-2"
                                         >
                                             <FaSignOutAlt className="w-5 h-5" /> 

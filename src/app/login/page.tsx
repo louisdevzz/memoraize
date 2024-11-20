@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import toast, { Toaster } from 'react-hot-toast';
 
 const LoginPage = () => {
   const router = useRouter();
@@ -16,6 +17,8 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
 
+    const loadingToast = toast.loading('Logging in...');
+
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -25,16 +28,26 @@ const LoginPage = () => {
         body: JSON.stringify(formData),
       });
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
+        toast.success('Successfully logged in!', {
+          id: loadingToast,
+          duration: 3000,
+          icon: '🎉',
+        });
         router.push('/'); // Redirect after successful login
       } else {
-        // Handle error
-        console.error('Login failed');
+        toast.error(data.message || 'Login failed', {
+          id: loadingToast,
+          duration: 4000,
+        });
       }
     } catch (error) {
-      console.error('Login error:', error);
+      toast.error('Network error occurred', {
+        id: loadingToast,
+        duration: 4000,
+      });
     } finally {
       setLoading(false);
     }
@@ -49,6 +62,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-pink-50 flex items-center justify-center px-4">
+      <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full max-w-[380px] p-6 sm:p-8 space-y-4 sm:space-y-6 bg-white/80 backdrop-blur-md rounded-2xl shadow-xl relative">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2">
           Welcome Back to <span className="gradient-text">BrainCards</span>
