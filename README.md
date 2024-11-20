@@ -81,4 +81,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Louisdevzz - [@_huu_nhnz04](https://twitter.com/_huu_nhnz04)
 
-Project Link: [https://github.com/louisdevzz/flashcards](https://github.com/louisdevzz/flashcards)
+Project Link: [https://github.com/louisdevzz/memoraize](https://github.com/louisdevzz/memoraize)

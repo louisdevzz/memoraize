@@ -1,6 +1,6 @@
-import { generateExamMetadata } from '../../../metadata/exam';
+import { generateExamMetadata } from '@/app/metadata/exam';
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: { params: any }) {
   return generateExamMetadata(params.id);
 }
 

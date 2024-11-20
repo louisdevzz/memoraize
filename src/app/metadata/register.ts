@@ -6,6 +6,6 @@ export const registerMetadata: Metadata = {
   openGraph: {
     title: 'Register - MemorAIze',
     description: 'Start your AI-enhanced learning journey today.',
-    url: 'https://memoraize.vercel.app/register',
+    url: 'https://memoraize-ai.vercel.app/register',
   },
 }; 

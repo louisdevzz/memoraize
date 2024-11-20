@@ -6,6 +6,6 @@ export const generateExamMetadata = (title: string): Metadata => ({
   openGraph: {
     title: `${title} - MemorAIze Exam Mode`,
     description: `Smart testing and progress tracking for ${title}.`,
-    url: `https://memoraize.vercel.app/flashcards/exam/${title}`,
+    url: `https://memoraize-ai.vercel.app/flashcards/exam/${title}`,
   },
 }); 

@@ -1,6 +1,12 @@
-import { generateFlashcardMetadata } from '../../metadata/flashcard';
+import { Metadata } from 'next';
+import { generateFlashcardMetadata } from '@/app/metadata/flashcard';
 
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: any 
+}): Promise<Metadata> {
   return generateFlashcardMetadata(params.slug);
 }
 

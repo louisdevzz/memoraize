@@ -24,13 +24,13 @@ export const defaultMetadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://memoraize.vercel.app/',
+    url: 'https://memoraize-ai.vercel.app/',
     siteName: 'MemorAIze',
     title: 'MemorAIze - AI-Powered Learning Platform',
     description: 'Transform your learning experience with AI-powered flashcards and personalized study techniques.',
     images: [
       {
-        url: 'https://memoraize.vercel.app/og-image.jpg',
+        url: 'https://memoraize-ai.vercel.app/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'MemorAIze Platform',
@@ -41,7 +41,7 @@ export const defaultMetadata: Metadata = {
     card: 'summary_large_image',
     title: 'MemorAIze - AI-Powered Learning Platform',
     description: 'Transform your learning experience with AI-powered flashcards.',
-    images: ['https://memoraize.vercel.app/og-image.jpg'],
+    images: ['https://memoraize-ai.vercel.app/og-image.jpg'],
     creator: '@_huu_nhnz04',
   },
   robots: {

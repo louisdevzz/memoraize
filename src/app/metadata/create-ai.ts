@@ -6,6 +6,6 @@ export const createAIFlashcardMetadata: Metadata = {
   openGraph: {
     title: 'AI-Powered Flashcard Generation - MemorAIze',
     description: 'Generate intelligent study materials instantly with AI.',
-    url: 'https://memoraize.vercel.app/flashcards/create-by-ai',
+    url: 'https://memoraize-ai.vercel.app/flashcards/create-by-ai',
   },
 }; 
