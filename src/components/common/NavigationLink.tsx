@@ -8,9 +8,10 @@ interface NavigationLinkProps {
     children: React.ReactNode;
     className?: string;
     onClick?: () => void;
+    style?: React.CSSProperties;
 }
 
-const NavigationLink = ({ href, children, className = '', onClick }: NavigationLinkProps) => {
+const NavigationLink = ({ href, children, className = '', onClick,style }: NavigationLinkProps) => {
     const router = useRouter();
     const pathname = usePathname();
     const [isNavigating, setIsNavigating] = useState(false);
@@ -50,6 +51,7 @@ const NavigationLink = ({ href, children, className = '', onClick }: NavigationL
         <Link
             href={href}
             onClick={handleClick}
+            style={style}
             className={`${className} ${isNavigating ? 'pointer-events-none opacity-70' : ''}`}
         >
             {children}

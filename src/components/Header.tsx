@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { FaSchool, FaUser, FaEdit, FaSignOutAlt, FaChevronDown, FaSearch, FaChartBar, FaPlus, FaRobot, FaList, FaPencilAlt } from 'react-icons/fa';
-import Link from 'next/link';
+import { FaSchool, FaUser, FaEdit, FaSignOutAlt, FaChevronDown, FaSearch, FaChartBar, FaPlus, FaRobot, FaList, FaPencilAlt, FaUsers } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 
 import NavigationLink from './common/NavigationLink';
@@ -13,6 +12,8 @@ const Header = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isCreateDropdownOpen, setIsCreateDropdownOpen] = useState(false);
     const createDropdownRef = useRef<HTMLDivElement>(null);
+    const [isActivitiesDropdownOpen, setIsActivitiesDropdownOpen] = useState(false);
+    const activitiesDropdownRef = useRef<HTMLDivElement>(null);
 
     const router = useRouter();
         
@@ -97,6 +98,25 @@ const Header = () => {
         };
     }, [isMobileMenuOpen]);
 
+    // Thêm useEffect để xử lý click outside cho cả hai dropdown
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            // Xử lý cho Create dropdown
+            if (createDropdownRef.current && !createDropdownRef.current.contains(event.target as Node)) {
+                setIsCreateDropdownOpen(false);
+            }
+            
+            // Xử lý cho Activities dropdown
+            if (activitiesDropdownRef.current && !activitiesDropdownRef.current.contains(event.target as Node)) {
+                setIsActivitiesDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     return (
         <header className={`fixed w-full top-0 z-30 transition-all duration-300 ${
@@ -135,14 +155,40 @@ const Header = () => {
                                     <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
                                 </NavigationLink>
 
-                                <NavigationLink
-                                    href="/activities/me"
-                                    className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2"
-                                >
-                                    <FaList className="w-4 h-4" />
-                                    My Activities
-                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                                </NavigationLink>
+                                <div className="relative" ref={activitiesDropdownRef}>
+                                    <button
+                                        onClick={() => setIsActivitiesDropdownOpen(!isActivitiesDropdownOpen)}
+                                        className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2"
+                                    >
+                                        <FaList className="w-4 h-4" />
+                                        Activities
+                                        <FaChevronDown className={`w-3 h-3 transition-transform duration-200 ${isActivitiesDropdownOpen ? 'rotate-180' : ''}`} />
+                                        <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                    </button>
+
+                                    {isActivitiesDropdownOpen && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-10">
+                                            <NavigationLink
+                                                href="/activities/me"
+                                                className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                                onClick={() => setIsActivitiesDropdownOpen(false)}
+                                            >
+                                                <FaUser className="w-4 h-4" />
+                                                My Activities
+                                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                            </NavigationLink>
+                                            <NavigationLink
+                                                href="/activities"
+                                                className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                                onClick={() => setIsActivitiesDropdownOpen(false)}
+                                            >
+                                                <FaUsers className="w-4 h-4" />
+                                                All Activities
+                                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                            </NavigationLink>
+                                        </div>
+                                    )}
+                                </div>
                             </>
                         )}
                         <div className="relative" ref={createDropdownRef}>
@@ -158,7 +204,7 @@ const Header = () => {
 
                             {isCreateDropdownOpen && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-10">
-                                    <Link
+                                    <NavigationLink
                                         href={isLoggedIn ? "/flashcards/create" : "/login"}
                                         className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
                                         onClick={() => setIsCreateDropdownOpen(false)}
@@ -166,8 +212,8 @@ const Header = () => {
                                         <FaPencilAlt className="w-4 h-4" />
                                         Create Manually
                                         <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                                    </Link>
-                                    <Link
+                                    </NavigationLink>
+                                    <NavigationLink
                                         href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
                                         className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
                                         onClick={() => setIsCreateDropdownOpen(false)}
@@ -175,13 +221,13 @@ const Header = () => {
                                         <FaRobot className="w-4 h-4" />
                                         Create with AI
                                         <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                                    </Link>
+                                    </NavigationLink>
                                 </div>
                             )}
                         </div>
 
                         {!isLoggedIn &&(
-                            <Link 
+                            <NavigationLink 
                                 href="/login"
                                 className="px-5 py-2.5 relative rounded-xl border-2 border-transparent hover:shadow-lg transition-all duration-200"
                                 style={{
@@ -193,7 +239,7 @@ const Header = () => {
                                 <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent font-semibold">
                                     Sign In
                                 </span>
-                            </Link>
+                            </NavigationLink>
                         )}
 
                         {/* User Profile Dropdown */}
@@ -305,15 +351,6 @@ const Header = () => {
                                     {isLoggedIn && (
                                         <>
                                             <NavigationLink
-                                                href="/activities/me"
-                                                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                            >
-                                                <FaList className="w-4 h-4" />
-                                                My Activities
-                                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                                            </NavigationLink>
-                                            <NavigationLink
                                                 href="/results"
                                                 className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group"
                                                 onClick={() => setIsMobileMenuOpen(false)}
@@ -322,6 +359,53 @@ const Header = () => {
                                                 My Results
                                                 <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
                                             </NavigationLink>
+
+                                            <div className="relative">
+                                                <button
+                                                    onClick={() => setIsActivitiesDropdownOpen(!isActivitiesDropdownOpen)}
+                                                    className="w-full flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group"
+                                                >
+                                                    <FaList className="w-4 h-4" />
+                                                    Activities
+                                                    <FaChevronDown className={`w-3 h-3 ml-auto transition-transform duration-200 ${isActivitiesDropdownOpen ? 'rotate-180' : ''}`} />
+                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                                </button>
+
+                                                {isActivitiesDropdownOpen && (
+                                                    <>
+                                                        <div 
+                                                            className="fixed inset-0 z-0" 
+                                                            onClick={() => setIsActivitiesDropdownOpen(false)}
+                                                        />
+                                                        <div className="mt-1 bg-gray-50 rounded-lg overflow-hidden relative z-10">
+                                                            <NavigationLink
+                                                                href="/activities/me"
+                                                                className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                                                onClick={() => {
+                                                                    setIsActivitiesDropdownOpen(false);
+                                                                    setIsMobileMenuOpen(false);
+                                                                }}
+                                                            >
+                                                                <FaUser className="w-4 h-4" />
+                                                                My Activities
+                                                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                                            </NavigationLink>
+                                                            <NavigationLink
+                                                                href="/activities"
+                                                                className="flex items-center gap-2 px-6 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                                                onClick={() => {
+                                                                    setIsActivitiesDropdownOpen(false);
+                                                                    setIsMobileMenuOpen(false);
+                                                                }}
+                                                            >
+                                                                <FaUsers className="w-4 h-4" />
+                                                                All Activities
+                                                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                                            </NavigationLink>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
                                         </>
                                     )}
 
@@ -338,37 +422,43 @@ const Header = () => {
                                         </button>
 
                                         {isCreateDropdownOpen && (
-                                            <div className="mt-1 bg-white rounded-lg overflow-hidden">
-                                                <Link 
-                                                    href={isLoggedIn ? "/flashcards/create" : "/login"}
-                                                    className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
-                                                    onClick={() => {
-                                                        setIsCreateDropdownOpen(false);
-                                                        setIsMobileMenuOpen(false);
-                                                    }}
-                                                >
-                                                    <FaPencilAlt className="w-4 h-4" />
-                                                    Create Manually
-                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                                                </Link>
-                                                <Link 
-                                                    href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
-                                                    className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
-                                                    onClick={() => {
-                                                        setIsCreateDropdownOpen(false);
-                                                        setIsMobileMenuOpen(false);
-                                                    }}
-                                                >
-                                                    <FaRobot className="w-4 h-4" />
-                                                    Create with AI
-                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                                                </Link>
-                                            </div>
+                                            <>
+                                                <div 
+                                                    className="fixed inset-0 z-0" 
+                                                    onClick={() => setIsCreateDropdownOpen(false)}
+                                                />
+                                                <div className="mt-1 bg-gray-50 rounded-lg overflow-hidden relative z-10">
+                                                    <NavigationLink 
+                                                        href={isLoggedIn ? "/flashcards/create" : "/login"}
+                                                        className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                                        onClick={() => {
+                                                            setIsCreateDropdownOpen(false);
+                                                            setIsMobileMenuOpen(false);
+                                                        }}
+                                                    >
+                                                        <FaPencilAlt className="w-4 h-4" />
+                                                        Create Manually
+                                                        <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                                    </NavigationLink>
+                                                    <NavigationLink 
+                                                        href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
+                                                        className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                                        onClick={() => {
+                                                            setIsCreateDropdownOpen(false);
+                                                            setIsMobileMenuOpen(false);
+                                                        }}
+                                                    >
+                                                        <FaRobot className="w-4 h-4" />
+                                                        Create with AI
+                                                        <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                                    </NavigationLink>
+                                                </div>
+                                            </>
                                         )}
                                     </div>
 
                                     {!isLoggedIn && (
-                                        <Link 
+                                        <NavigationLink 
                                             href="/login"
                                             className="block w-full py-3 relative rounded-lg text-center border-2 border-transparent"
                                             onClick={() => setIsMobileMenuOpen(false)}
@@ -381,7 +471,7 @@ const Header = () => {
                                             <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent font-semibold">
                                                 Sign In
                                             </span>
-                                        </Link>
+                                        </NavigationLink>
                                     )}
                                 </div>
 
