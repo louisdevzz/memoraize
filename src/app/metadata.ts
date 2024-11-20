@@ -34,6 +34,7 @@ export const defaultMetadata: Metadata = {
         width: 1200,
         height: 630,
         alt: 'MemorAIze Platform',
+        type: 'image/jpeg',
       },
     ],
   },
@@ -41,7 +42,13 @@ export const defaultMetadata: Metadata = {
     card: 'summary_large_image',
     title: 'MemorAIze - AI-Powered Learning Platform',
     description: 'Transform your learning experience with AI-powered flashcards.',
-    images: ['https://memoraize-ai.vercel.app/og-image.jpg'],
+    images: {
+      url: 'https://memoraize-ai.vercel.app/og-image.jpg',
+      width: 1200,
+      height: 600,
+      alt: 'MemorAIze Platform',
+      type: 'image/jpeg',
+    },
     creator: '@_huu_nhnz04',
   },
   robots: {
