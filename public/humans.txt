@@ -1,0 +1,9 @@
+/* TEAM */
+Developer: Louisdevzz
+Twitter: @_huu_nhnz04
+Location: Vietnam
+
+/* SITE */
+Last update: 2024/03/20
+Standards: HTML5, CSS3, TypeScript
+Components: Next.js, React, Tailwind CSS 

@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import Loader from "@/components/Loader";
 import { defaultMetadata } from './metadata';
 import { Toaster } from 'react-hot-toast';
+import { websiteJsonLd, organizationJsonLd } from './jsonld'
 
 const roboto = Roboto({
   weight: ["400", "700"],
@@ -22,6 +23,24 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <meta name="theme-color" content="#000000" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(websiteJsonLd)
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationJsonLd)
+          }}
+        />
+      </head>
       <body className={`${roboto.className} antialiased`}>
         <Suspense fallback={<Loader />}>
           <StyledComponentsRegistry>{children}</StyledComponentsRegistry>

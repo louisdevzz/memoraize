@@ -1,0 +1,17 @@
+# https://memoraize-ai.vercel.app/robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow admin and api routes
+Disallow: /api/*
+Disallow: /admin/*
+
+# Allow all bots to crawl main content
+Allow: /flashcards/*
+Allow: /login
+Allow: /register
+Allow: /results
+
+# Sitemap
+Sitemap: https://memoraize-ai.vercel.app/sitemap.xml 

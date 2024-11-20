@@ -11,7 +11,17 @@ export const defaultMetadata: Metadata = {
     'personalized learning',
     'education technology',
     'memory training',
-    'artificial intelligence'
+    'artificial intelligence',
+    'học tập thông minh',
+    'thẻ ghi nhớ',
+    'ôn thi hiệu quả',
+    'học với AI',
+    'công cụ học tập',
+    'memorize cards',
+    'study tools',
+    'learning assistant',
+    'AI study helper',
+    'free flashcards'
   ],
   authors: [{ name: 'Louisdevzz' }],
   creator: 'Louisdevzz',
@@ -61,5 +71,26 @@ export const defaultMetadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     } as any,
+  },
+  metadataBase: new URL('https://memoraize-ai.vercel.app'),
+  alternates: {
+    canonical: '/',
+    languages: {
+      'en-US': '/en-US',
+      'vi-VN': '/vi-VN',
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code',
+    yandex: 'your-yandex-verification-code',
+    // Add other search engine verification codes
+  },
+  category: 'education',
+  classification: 'Education Technology',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
   },
 }; 
