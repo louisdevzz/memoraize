@@ -12,15 +12,18 @@ async function verifyAuth() {
         throw new Error('Not authenticated');
     }
 
+    let session;
     try {
-        const session = JSON.parse(sessionCookie.value);
-        if (!session || !session.userId) {
-            throw new Error('Invalid session');
-        }
-        return session.userId;
+        session = JSON.parse(sessionCookie.value);
     } catch (e) {
         throw new Error('Invalid session');
     }
+
+    if (!session || !session.email) {
+        throw new Error('Invalid session data');
+    }
+
+    return session.email; // Using email as userId since that's what we have in the session
 }
 
 export async function GET(request: NextRequest) {    

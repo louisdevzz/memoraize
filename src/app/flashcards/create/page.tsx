@@ -19,6 +19,7 @@ const CreateFlashcardPage = () => {
     const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const [uploadingFiles, setUploadingFiles] = useState<{ [key: number]: boolean }>({});
     const [imageLoading, setImageLoading] = useState<{ [key: number]: boolean }>({});
+    const [error, setError] = useState<string>('');
 
     function createEmptyFlashcard(): Flashcard {
         return {
@@ -434,20 +435,29 @@ const CreateFlashcardPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+        setError('');
+
         try {
-            const token = localStorage.getItem('token');
-            
-            if (!token) {
-                router.push('/login');
-                return;
+            // Validate flashcards
+            const invalidFlashcards = formData.flashcards.filter(flashcard => {
+                if (!flashcard.front || !flashcard.back) return true;
+                if (flashcard.type === 'multipleChoice' && 
+                    (!flashcard.options?.length || !flashcard.correctOption)) return true;
+                if (flashcard.type === 'image' && !flashcard.imageUrl) return true;
+                if (flashcard.type === 'audio' && !flashcard.audioUrl) return true;
+                return false;
+            });
+
+            if (invalidFlashcards.length > 0) {
+                throw new Error('Please fill in all required fields for each flashcard');
             }
 
             const response = await fetch('/api/flashcards', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
                 },
+                credentials: 'include', // Important for sending cookies
                 body: JSON.stringify({
                     title: formData.title,
                     description: formData.description,
@@ -456,14 +466,20 @@ const CreateFlashcardPage = () => {
                 }),
             });
 
-            if (response.ok) {
-                router.push('/');
-            } else {
-                const data = await response.json();
-                throw new Error(data.error || 'Failed to create lesson');
+            const data = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    router.push('/login');
+                    return;
+                }
+                throw new Error(data.error || 'Failed to create flashcard set');
             }
-        } catch (error) {
-            console.error('Error creating lesson:', error);
+
+            router.push(`/flashcards/${data.slug}`);
+        } catch (error: any) {
+            setError(error.message || 'An unexpected error occurred');
+            console.error('Error creating flashcard set:', error);
         } finally {
             setIsLoading(false);
         }

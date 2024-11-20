@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
+import { cookies } from 'next/headers';
 import connectDB from "@/lib/mongodb";
 import Lesson from "@/models/Lesson";
-import jwt from 'jsonwebtoken';
-import { headers } from 'next/headers';
-
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || ''; // Should match the one in auth routes
 
 async function verifyAuth() {
-    const headersList = await headers();
-    const token = headersList.get('Authorization')?.replace('Bearer ', '');
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('session');
 
-    if (!token) {
-        throw new Error('No token provided');
+    if (!sessionCookie || !sessionCookie.value) {
+        throw new Error('Not authenticated');
     }
 
+    let session;
     try {
-        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
-        return decoded.userId;
-    } catch (error) {
-        throw new Error('Invalid token');
+        session = JSON.parse(sessionCookie.value);
+    } catch (e) {
+        throw new Error('Invalid session');
     }
+
+    if (!session || !session.email) {
+        throw new Error('Invalid session data');
+    }
+
+    return session.email; // Using email as userId since that's what we have in the session
 }
 
 export async function GET(request: Request) {
@@ -48,11 +51,12 @@ export async function GET(request: Request) {
 export async function POST(req: Request) {
     try {
         // Verify authentication
+        let userEmail;
         try {
-            await verifyAuth();
+            userEmail = await verifyAuth();
         } catch (error) {
             return NextResponse.json(
-                { error: 'Unauthorized' },
+                { error: 'Please log in to continue' },
                 { status: 401 }
             );
         }
@@ -63,44 +67,93 @@ export async function POST(req: Request) {
         // Parse request body
         const body = await req.json();
         const { title, description, flashcards, visibility } = body;
-        const userId = await verifyAuth();
-        
+
         // Validate required fields
-        if (!title || !description || !flashcards || flashcards.length === 0) {
+        if (!title?.trim()) {
             return NextResponse.json(
-                { error: 'Missing required fields' },
+                { error: 'Title is required' },
                 { status: 400 }
             );
         }
 
-        // Validate flashcard structure
-        const isValidFlashcards = flashcards.every((card: any) => 
-            card.front && typeof card.front === 'string' &&
-            card.back && typeof card.back === 'string'
-        );
-
-        if (!isValidFlashcards) {
+        if (!description?.trim()) {
             return NextResponse.json(
-                { error: 'Invalid flashcard format' },
+                { error: 'Description is required' },
                 { status: 400 }
             );
         }
 
-        // Create new lesson with visibility
+        if (!Array.isArray(flashcards) || flashcards.length === 0) {
+            return NextResponse.json(
+                { error: 'At least one flashcard is required' },
+                { status: 400 }
+            );
+        }
+
+        // Validate each flashcard
+        for (const [index, card] of flashcards.entries()) {
+            if (!card.type || !['text', 'image', 'multipleChoice', 'audio'].includes(card.type)) {
+                return NextResponse.json(
+                    { error: `Invalid type for flashcard ${index + 1}` },
+                    { status: 400 }
+                );
+            }
+
+            if (!card.front?.trim() || !card.back?.trim()) {
+                return NextResponse.json(
+                    { error: `Missing content for flashcard ${index + 1}` },
+                    { status: 400 }
+                );
+            }
+
+            if (card.type === 'multipleChoice') {
+                if (!Array.isArray(card.options) || card.options.length < 2) {
+                    return NextResponse.json(
+                        { error: `Multiple choice flashcard ${index + 1} must have at least 2 options` },
+                        { status: 400 }
+                    );
+                }
+                if (!card.correctOption || !card.options.includes(card.correctOption)) {
+                    return NextResponse.json(
+                        { error: `Invalid correct option for flashcard ${index + 1}` },
+                        { status: 400 }
+                    );
+                }
+            }
+
+            if (card.type === 'image' && !card.imageUrl) {
+                return NextResponse.json(
+                    { error: `Missing image URL for flashcard ${index + 1}` },
+                    { status: 400 }
+                );
+            }
+
+            if (card.type === 'audio' && !card.audioUrl) {
+                return NextResponse.json(
+                    { error: `Missing audio URL for flashcard ${index + 1}` },
+                    { status: 400 }
+                );
+            }
+        }
+
+        // Create slug from title
+        const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+
+        // Create new lesson
         const lesson = await Lesson.create({
             title,
             description,
             flashcards,
-            userId,
+            userId: userEmail, // Using email as userId
             visibility: visibility || 'private',
-            slug: title.toLowerCase().replace(/ /g, '-')
+            slug
         });
 
         return NextResponse.json(lesson, { status: 201 });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating lesson:', error);
         return NextResponse.json(
-            { error: 'Failed to create lesson' },
+            { error: error.message || 'Failed to create flashcard set' },
             { status: 500 }
         );
     }
@@ -109,11 +162,12 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
     try {
         // Verify authentication
+        let userEmail;
         try {
-            await verifyAuth();
+            userEmail = await verifyAuth();
         } catch (error) {
             return NextResponse.json(
-                { error: 'Unauthorized' },
+                { error: 'Please log in to continue' },
                 { status: 401 }
             );
         }
@@ -124,7 +178,6 @@ export async function PUT(req: Request) {
         // Parse request body
         const body = await req.json();
         const { title, description, flashcards, slug, visibility } = body;
-        const userId = await verifyAuth();
 
         // Validate required fields
         if (!title || !description || !flashcards || flashcards.length === 0 || !slug) {
@@ -149,7 +202,7 @@ export async function PUT(req: Request) {
 
         // Find and update the lesson
         const lesson = await Lesson.findOneAndUpdate(
-            { slug, userId },
+            { slug, userId: userEmail },
             {
                 title,
                 description,
@@ -180,11 +233,12 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
     try {
         // Verify authentication
+        let userEmail;
         try {
-            await verifyAuth();
+            userEmail = await verifyAuth();
         } catch (error) {
             return NextResponse.json(
-                { error: 'Unauthorized' },
+                { error: 'Please log in to continue' },
                 { status: 401 }
             );
         }
@@ -195,7 +249,6 @@ export async function DELETE(req: Request) {
         // Get the slug from the URL
         const url = new URL(req.url);
         const slug = url.searchParams.get('slug');
-        const userId = await verifyAuth();
 
         if (!slug) {
             return NextResponse.json(
@@ -205,7 +258,7 @@ export async function DELETE(req: Request) {
         }
 
         // Find and delete the lesson
-        const deletedLesson = await Lesson.findOneAndDelete({ slug, userId });
+        const deletedLesson = await Lesson.findOneAndDelete({ slug, userId: userEmail });
 
         if (!deletedLesson) {
             return NextResponse.json(

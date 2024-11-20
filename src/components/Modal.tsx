@@ -26,17 +26,19 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, onConfirm, title, messag
         <div className="flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-gray-700 hover:text-gray-900 rounded-lg relative group flex items-center gap-2 transition-all duration-200"
           >
             <FiX size={18} />
             Cancel
+            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors flex items-center gap-2"
+            className="px-4 py-2 text-red-600 hover:text-red-700 rounded-lg relative group flex items-center gap-2 transition-all duration-200"
           >
             <FiTrash2 size={18} />
             Delete
+            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-red-600 to-red-500 group-hover:w-full transition-all duration-300" />
           </button>
         </div>
       </div>

@@ -65,7 +65,7 @@ const LoginPage = () => {
       <Toaster position="top-center" reverseOrder={false} />
       <div className="w-full max-w-[380px] p-6 sm:p-8 space-y-4 sm:space-y-6 bg-white/80 backdrop-blur-md rounded-2xl shadow-xl relative">
         <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2">
-          Welcome Back to <span className="gradient-text">BrainCards</span>
+          Welcome Back to <span className="gradient-text">MemorAIze</span>
         </h1>
         
         <form onSubmit={handleSubmit} className="space-y-4">

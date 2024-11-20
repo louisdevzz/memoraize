@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
-import { FaSchool, FaUser, FaEdit, FaSignOutAlt, FaChevronDown, FaSearch, FaChartBar, FaPlus, FaRobot, FaList } from 'react-icons/fa';
+import { useEffect, useState, useRef } from 'react';
+import { FaSchool, FaUser, FaEdit, FaSignOutAlt, FaChevronDown, FaSearch, FaChartBar, FaPlus, FaRobot, FaList, FaPencilAlt } from 'react-icons/fa';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+
+import NavigationLink from './common/NavigationLink';
 
 const Header = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -9,6 +11,8 @@ const Header = () => {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [userData, setUserData] = useState<{ email: string; name: string } | null>(null);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isCreateDropdownOpen, setIsCreateDropdownOpen] = useState(false);
+    const createDropdownRef = useRef<HTMLDivElement>(null);
 
     const router = useRouter();
         
@@ -54,6 +58,7 @@ const Header = () => {
         };
     }, []);
 
+
     const handleLogout = async () => {
         try {
             console.log('Logging out...');
@@ -92,6 +97,7 @@ const Header = () => {
         };
     }, [isMobileMenuOpen]);
 
+
     return (
         <header className={`fixed w-full top-0 z-30 transition-all duration-300 ${
             isScrolled ? 'bg-white/80 backdrop-blur-md shadow-lg' : 'bg-transparent'
@@ -99,62 +105,80 @@ const Header = () => {
             <div className="container mx-auto sm:px-6 px-2">
                 <div className="flex justify-between items-center h-20">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center gap-2 transition hover:opacity-75">
+                    <NavigationLink href="/" className="flex items-center gap-2 transition hover:opacity-75">
                         <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
                             <span className="text-xl font-bold text-white">M</span>
                         </div>
                         <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
                             MemorAIze
                         </span>
-                    </Link>
-
-                    {/* Mobile Menu Button */}
-                    {/* <button 
-                        className="md:hidden relative z-50 w-10 h-10 focus:outline-none group"
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    >
-                        <div className="relative flex flex-col items-center justify-center w-6 h-6 mx-auto">
-                            <span className={`w-full h-0.5 bg-gray-600 transform transition-all duration-300 ${isMobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></span>
-                            <span className={`w-full h-0.5 bg-gray-600 mt-1.5 transform transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : ''}`}></span>
-                            <span className={`w-full h-0.5 bg-gray-600 mt-1.5 transform transition-all duration-300 ${isMobileMenuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></span>
-                        </div>
-                    </button> */}
+                    </NavigationLink>
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-3">
-                        <Link href="/explore" className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2">
+                        <NavigationLink 
+                            href="/explore"
+                            className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2"
+                        >
                             <FaSearch className="w-4 h-4" />
                             Explore
                             <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                        </Link>
-                        {isLoggedIn&&(
+                        </NavigationLink>
+                        {isLoggedIn && (
                             <>
-                                <Link href="/results" className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2">
+                                <NavigationLink
+                                    href="/results"
+                                    className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2"
+                                >
                                     <FaChartBar className="w-4 h-4" />
                                     My Results
                                     <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                                </Link>
-                                <Link href="/activities" className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2">
+                                </NavigationLink>
+
+                                <NavigationLink
+                                    href="/activities/me"
+                                    className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2"
+                                >
                                     <FaList className="w-4 h-4" />
                                     My Activities
                                     <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
-                                </Link>
+                                </NavigationLink>
                             </>
                         )}
-                        <Link 
-                            href={isLoggedIn ? "/flashcards/create" : "/login"}
-                            className="px-5 py-2.5 text-white bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-xl hover:shadow-lg hover:shadow-indigo-500/30 transition-all duration-200 flex items-center gap-2"
-                        >
-                            <FaPlus className="w-4 h-4" />
-                            Create Activity
-                        </Link>
-                        <Link 
-                            href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
-                            className="px-5 py-2.5 text-white bg-gradient-to-r from-purple-600 to-purple-500 rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all duration-200 flex items-center gap-2"
-                        >
-                            <FaRobot className="w-4 h-4" />
-                            Create by AI
-                        </Link>
+                        <div className="relative" ref={createDropdownRef}>
+                            <button
+                                onClick={() => setIsCreateDropdownOpen(!isCreateDropdownOpen)}
+                                className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group flex items-center gap-2"
+                            >
+                                <FaPlus className="w-4 h-4" />
+                                Create
+                                <FaChevronDown className={`w-3 h-3 transition-transform duration-200 ${isCreateDropdownOpen ? 'rotate-180' : ''}`} />
+                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                            </button>
+
+                            {isCreateDropdownOpen && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-10">
+                                    <Link
+                                        href={isLoggedIn ? "/flashcards/create" : "/login"}
+                                        className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                        onClick={() => setIsCreateDropdownOpen(false)}
+                                    >
+                                        <FaPencilAlt className="w-4 h-4" />
+                                        Create Manually
+                                        <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                    </Link>
+                                    <Link
+                                        href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
+                                        className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                        onClick={() => setIsCreateDropdownOpen(false)}
+                                    >
+                                        <FaRobot className="w-4 h-4" />
+                                        Create with AI
+                                        <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
 
                         {!isLoggedIn &&(
                             <Link 
@@ -199,24 +223,33 @@ const Header = () => {
                                             onClick={handleOverlayClick}
                                         />
                                         <div className="absolute right-0 mt-3 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-10">
-                                            <div className="px-4 py-3 bg-gradient-to-r from-indigo-600 to-pink-500 text-white font-medium">
+                                            <div className="px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group">
                                                 BASIC ACCOUNT
+                                                <div className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 w-full transition-all duration-300" />
                                             </div>
                                             <div className="p-2 space-y-1">
-                                                <a href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                                                    <FaSchool className="w-5 h-5 text-gray-500" /> My school
+                                                <a href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group">
+                                                    <FaSchool className="w-5 h-5 text-gray-500" /> 
+                                                    My school
+                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
                                                 </a>
-                                                <a href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                                                    <FaUser className="w-5 h-5 text-gray-500" /> My Profile Page
+                                                <a href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group">
+                                                    <FaUser className="w-5 h-5 text-gray-500" /> 
+                                                    My Profile Page
+                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
                                                 </a>
-                                                <a href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                                                    <FaEdit className="w-5 h-5 text-gray-500" /> Edit personal details
+                                                <a href="#" className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group">
+                                                    <FaEdit className="w-5 h-5 text-gray-500" /> 
+                                                    Edit personal details
+                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
                                                 </a>
                                                 <button 
-                                                    className="flex items-center gap-3 px-4 py-2.5 text-red-600 rounded-lg hover:bg-red-50 transition-colors duration-200 w-full"
+                                                    className="flex items-center gap-3 px-4 py-2.5 text-red-600 hover:text-red-700 transition-all duration-200 rounded-lg relative group w-full"
                                                     onClick={handleLogout}
                                                 >
-                                                    <FaSignOutAlt className="w-5 h-5" /> Log Out
+                                                    <FaSignOutAlt className="w-5 h-5" /> 
+                                                    Log Out
+                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-red-600 to-red-500 group-hover:w-full transition-all duration-300" />
                                                 </button>
                                             </div>
                                         </div>
@@ -259,66 +292,97 @@ const Header = () => {
 
                                 {/* Menu Content */}
                                 <div className="flex-1 p-4 space-y-4">
-                                    <Link 
-                                        href="/explore" 
-                                        className="block text-gray-700"
+                                    <NavigationLink
+                                        href="/explore"
+                                        className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
+                                        <FaSearch className="w-4 h-4" />
                                         Explore
-                                    </Link>
+                                        <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                    </NavigationLink>
                                     
                                     {isLoggedIn && (
                                         <>
-                                            <Link 
-                                                href="/activities" 
-                                                className="block text-gray-700"
+                                            <NavigationLink
+                                                href="/activities/me"
+                                                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group"
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                             >
+                                                <FaList className="w-4 h-4" />
                                                 My Activities
-                                            </Link>
-                                            <Link 
-                                                href="/results" 
-                                                className="block text-gray-700"
+                                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                            </NavigationLink>
+                                            <NavigationLink
+                                                href="/results"
+                                                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group"
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                             >
+                                                <FaChartBar className="w-4 h-4" />
                                                 My Results
-                                            </Link>
+                                                <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                            </NavigationLink>
                                         </>
                                     )}
 
-                                    {/* Action Buttons */}
-                                    <div className="pt-4 space-y-3">
-                                        <Link 
-                                            href={isLoggedIn ? "/flashcards/create" : "/login"}
-                                            className="block w-full py-3 text-white bg-[#6366F1] rounded-lg text-center"
-                                            onClick={() => setIsMobileMenuOpen(false)}
+                                    {/* Create Dropdown in Mobile */}
+                                    <div className="relative">
+                                        <button
+                                            onClick={() => setIsCreateDropdownOpen(!isCreateDropdownOpen)}
+                                            className="w-full flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 transition-all duration-200 rounded-lg relative group"
                                         >
-                                            Create Activity
-                                        </Link>
-                                        <Link 
-                                            href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
-                                            className="block w-full py-3 text-white bg-[#9333EA] rounded-lg text-center"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            Create by AI
-                                        </Link>
-                                        {!isLoggedIn &&(
-                                            <Link 
-                                                href="/login"
-                                                className="block w-full py-3 relative rounded-lg text-center border-2 border-transparent"
-                                                onClick={() => setIsMobileMenuOpen(false)}
-                                                style={{
-                                                    backgroundImage: 'linear-gradient(white, white), linear-gradient(to right, #6366F1, #EC4899)',
-                                                    backgroundOrigin: 'border-box',
-                                                    backgroundClip: 'padding-box, border-box',
-                                                }}
-                                            >
-                                                <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent font-semibold">
-                                                    Sign In
-                                                </span>
-                                            </Link>
+                                            <FaPlus className="w-4 h-4" />
+                                            Create
+                                            <FaChevronDown className={`w-3 h-3 ml-auto transition-transform duration-200 ${isCreateDropdownOpen ? 'rotate-180' : ''}`} />
+                                            <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                        </button>
+
+                                        {isCreateDropdownOpen && (
+                                            <div className="mt-1 bg-white rounded-lg overflow-hidden">
+                                                <Link 
+                                                    href={isLoggedIn ? "/flashcards/create" : "/login"}
+                                                    className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                                    onClick={() => {
+                                                        setIsCreateDropdownOpen(false);
+                                                        setIsMobileMenuOpen(false);
+                                                    }}
+                                                >
+                                                    <FaPencilAlt className="w-4 h-4" />
+                                                    Create Manually
+                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                                </Link>
+                                                <Link 
+                                                    href={isLoggedIn ? "/flashcards/create-by-ai" : "/login"}
+                                                    className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:text-gray-900 transition-all duration-200 relative group"
+                                                    onClick={() => {
+                                                        setIsCreateDropdownOpen(false);
+                                                        setIsMobileMenuOpen(false);
+                                                    }}
+                                                >
+                                                    <FaRobot className="w-4 h-4" />
+                                                    Create with AI
+                                                    <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-pink-500 group-hover:w-full transition-all duration-300" />
+                                                </Link>
+                                            </div>
                                         )}
                                     </div>
+
+                                    {!isLoggedIn && (
+                                        <Link 
+                                            href="/login"
+                                            className="block w-full py-3 relative rounded-lg text-center border-2 border-transparent"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            style={{
+                                                backgroundImage: 'linear-gradient(white, white), linear-gradient(to right, #6366F1, #EC4899)',
+                                                backgroundOrigin: 'border-box',
+                                                backgroundClip: 'padding-box, border-box',
+                                            }}
+                                        >
+                                            <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent font-semibold">
+                                                Sign In
+                                            </span>
+                                        </Link>
+                                    )}
                                 </div>
 
                                 {/* User Section */}

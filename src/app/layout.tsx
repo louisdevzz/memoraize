@@ -6,6 +6,7 @@ import StyledComponentsRegistry from '../lib/registry'
 import { Suspense } from "react";
 import Loader from "@/components/Loader";
 import { defaultMetadata } from './metadata';
+import { Toaster } from 'react-hot-toast';
 
 const roboto = Roboto({
   weight: ["400", "700"],
@@ -26,6 +27,7 @@ export default function RootLayout({
           <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
         </Suspense>
         <Analytics />
+        <Toaster position="top-center" />
       </body>
     </html>
   );

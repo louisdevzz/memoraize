@@ -1,34 +1,65 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ILesson } from '@/models/Lesson';
-import { FiBook, FiBookOpen, FiClipboard, FiEdit3, FiAward, FiStar, FiUsers, FiHeart, FiCoffee, FiCode, FiMusic, FiGlobe } from 'react-icons/fi';
+import { FiBook, FiBookOpen, FiClipboard, FiEdit3, FiAward, FiStar, FiUser, FiHeart, FiCoffee, FiCode, FiMusic, FiGlobe, FiLock, FiUnlock } from 'react-icons/fi';
+import {FaRobot} from "react-icons/fa"
 import Header from '@/components/Header';
 import { motion } from 'framer-motion';
 
-
-const Explorer = () => {
+const MyLessons = () => {
     const [lessons, setLessons] = useState<ILesson[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
+
+    const fetchLessons = useCallback(async () => {
+        try {
+            setIsLoading(true);
+            
+            const response = await fetch('/api/flashcards/byUser', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    router.push('/login');
+                    return;
+                }
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.error) {
+                if (data.error === 'Not authenticated') {
+                    router.push('/login');
+                    return;
+                }
+                throw new Error(data.error);
+            }
+
+            if (Array.isArray(data)) {
+                setLessons(data);
+            }
+
+        } catch (error) {
+            console.error('Error fetching lessons:', error);
+            router.push('/login');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [router]);
 
     useEffect(() => {
-        const fetchPublicLessons = async () => {
-            try {
-                const response = await fetch('/api/flashcards?visibility=public');
-                if (response.ok) {
-                    const data = await response.json();
-                    setLessons(data);
-                }
-            } catch (error) {
-                console.error('Error fetching public lessons:', error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchPublicLessons();
-    }, []);
+        fetchLessons();
+    }, [fetchLessons]);
 
     const getRandomColor = () => {
         const colors = [
@@ -56,7 +87,7 @@ const Explorer = () => {
     if (isLoading) {
         return (
             <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-pink-50 flex items-center justify-center">
-                <div className='loader'/>
+                <div className="loader" />
             </div>
         );
     }
@@ -105,29 +136,37 @@ const Explorer = () => {
                                 transition: { duration: 3, repeat: Infinity, repeatType: "reverse" }
                             }}
                         >
-                            Explore Flashcards
+                            My Flashcards
                         </motion.h1>
                         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            Discover and learn from a variety of flashcard sets created by our community
+                            Manage and review your personal collection of flashcard sets
                         </p>
 
-                        {/* Feature Tags */}
-                        <div className="flex justify-center gap-4 mt-8 flex-wrap">
-                            {['Community Created', 'Interactive', 'Free Access', 'Multiple Topics'].map((feature, index) => (
-                                <motion.span 
-                                    key={feature}
-                                    className="px-4 py-2 bg-white rounded-full text-purple-600 text-sm font-medium shadow-sm"
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.5 + index * 0.1 }}
-                                    whileHover={{ 
-                                        scale: 1.1,
-                                        boxShadow: "0 4px 12px rgba(139, 92, 246, 0.2)"
-                                    }}
+                        <div className="flex flex-col md:flex-row gap-4 justify-center">
+                            <motion.div 
+                                className="mt-8"
+                                whileHover={{ scale: 1.05 }}
+                            >
+                                <Link 
+                                    href="/flashcards/create" 
+                                    className="inline-flex items-center gap-2 text-white font-medium bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300"
                                 >
-                                    {feature}
-                                </motion.span>
-                            ))}
+                                    <FiEdit3 size={18} />
+                                    Create New Set
+                                </Link>
+                            </motion.div>
+                            <motion.div 
+                                className="mt-8"
+                                whileHover={{ scale: 1.05 }}
+                            >
+                                <Link 
+                                    href="/flashcards/create-by-ai" 
+                                    className="inline-flex items-center gap-2 text-white font-medium bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300"
+                                >
+                                    <FaRobot size={18} />
+                                    Create by AI
+                                </Link>
+                            </motion.div>
                         </div>
                     </motion.div>
 
@@ -168,8 +207,17 @@ const Explorer = () => {
                                                         className="text-xs font-medium text-purple-600 bg-purple-50 
                                                                  px-2 py-1 rounded-full inline-block mb-1"
                                                     >
-                                                        <FiUsers className="inline mr-1" />
-                                                        Public Set
+                                                        {lesson.visibility === 'public' ? (
+                                                            <>
+                                                                <FiUnlock className="inline mr-1" />
+                                                                Public Set
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <FiLock className="inline mr-1" />
+                                                                Private Set
+                                                            </>
+                                                        )}
                                                     </div>
                                                     <h3 className="font-bold text-xl line-clamp-1">{lesson.title}</h3>
                                                 </div>
@@ -216,7 +264,7 @@ const Explorer = () => {
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-white/80 backdrop-blur-md rounded-2xl p-8 text-center border border-white/50 max-w-2xl mx-auto"
                         >
-                            <div className="text-gray-600 mb-4">No public flashcard sets available yet.</div>
+                            <div className="text-gray-600 mb-4">You haven't created any flashcard sets yet.</div>
                             <motion.div whileHover={{ scale: 1.05 }}>
                                 <Link 
                                     href="/create/template" 
@@ -234,4 +282,4 @@ const Explorer = () => {
     );
 };
 
-export default Explorer;
+export default MyLessons;
