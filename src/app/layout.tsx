@@ -5,16 +5,14 @@ import "./globals.css";
 import StyledComponentsRegistry from '../lib/registry'
 import { Suspense } from "react";
 import Loader from "@/components/Loader";
+import { defaultMetadata } from './metadata';
 
 const roboto = Roboto({
   weight: ["400", "700"],
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "BrainCards",
-  description: "BrainCards - Learn anything",
-};
+export const metadata: Metadata = defaultMetadata;
 
 export default function RootLayout({
   children,

@@ -1,37 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MemorAIze - AI-Powered Learning Platform
 
-## Getting Started
+MemorAIze is an innovative learning platform designed to revolutionize the way you memorize and retain knowledge. Powered by cutting-edge AI technology, MemorAIze offers interactive flashcards, engaging quizzes, and smart learning techniques tailored to your unique needs.
 
-First, run the development server:
+"Learn smarter, remember longer, succeed faster."
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Features
+
+- AI-powered flashcard generation
+- Smart spaced repetition
+- Adaptive learning paths
+- Progress analytics
+- Multi-modal learning support
+- Intelligent quiz generation
+- Cross-platform accessibility
+- Dark/Light mode support
+
+## 🛠️ Tech Stack
+
+- **Framework:** Next.js 14 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Database:** MongoDB
+- **Deployment:** Vercel
+- **UI Components:** Shadcn/ui
+
+## 📁 Project Structure
+
+```
+.
+├── public/                    # Static assets
+│   ├── vercel.svg
+│   ├── next.svg
+├── src/
+│   ├── app/                  # Next.js 14 App Router
+│   │   ├── api/
+│   │   │   └── auth/
+│   │   │       └── register/
+│   │   ├── fonts/           # Custom fonts
+│   │   │   ├── GeistVF.woff
+│   │   │   └── GeistMonoVF.woff
+│   │   ├── register/        # Registration page
+│   │   ├── favicon.ico
+│   │   ├── globals.css      # Global styles
+│   │   ├── layout.tsx       # Root layout
+│   │   ├── metadata.ts      # SEO configuration
+│   │   └── page.tsx         # Home page
+│   ├── components/          # Reusable components
+│   │   ├── Header.tsx
+│   │   └── Loader.tsx
+│   └── lib/                 # Utility functions
+│       └── registry.tsx     # Styled-components registry
+├── .env                     # Environment variables
+├── .gitignore
+├── next.config.ts          # Next.js configuration
+├── package.json
+├── postcss.config.mjs      # PostCSS configuration
+├── tailwind.config.ts      # Tailwind CSS configuration
+└── tsconfig.json           # TypeScript configuration
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 Design System
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The project uses a consistent design system with:
+- Custom color palette
+- Typography using Geist font
+- Responsive breakpoints
+- Reusable components
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📄 License
 
-## Learn More
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-To learn more about Next.js, take a look at the following resources:
+## 👏 Acknowledgments
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Tailwind CSS](https://tailwindcss.com)
+- [MongoDB](https://www.mongodb.com)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📧 Contact
 
-## Deploy on Vercel
+Louisdevzz - [@_huu_nhnz04](https://twitter.com/_huu_nhnz04)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# flashcards
+Project Link: [https://github.com/louisdevzz/flashcards](https://github.com/louisdevzz/flashcards)

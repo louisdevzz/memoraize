@@ -101,10 +101,10 @@ const Header = () => {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2 transition hover:opacity-75">
                         <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                            <span className="text-xl font-bold text-white">B</span>
+                            <span className="text-xl font-bold text-white">M</span>
                         </div>
                         <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
-                            BrainCards
+                            MemorAIze
                         </span>
                     </Link>
 

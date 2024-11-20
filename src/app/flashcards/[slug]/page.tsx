@@ -10,6 +10,7 @@ import { Flashcard } from '@/models/Lesson';
 import Modal from '@/components/Modal';
 import Header from '@/components/Header';
 import { useSwipeable } from 'react-swipeable';
+import { generateFlashcardMetadata } from '../../metadata/flashcard';
 
 interface Lesson {
     slug: string;
