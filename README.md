@@ -67,6 +67,32 @@ The project uses a consistent design system with:
 - Responsive breakpoints
 - Reusable components
 
+## 📦 Tech Stack
+
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- MongoDB
+- Vercel
+
+## 📦 Installation
+
+### Install pnpm
+```bash
+npm install -g pnpm
+```
+
+### Install dependencies
+```bash
+pnpm install
+```
+
+### Run the development server
+```bash
+pnpm dev
+```
+
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
